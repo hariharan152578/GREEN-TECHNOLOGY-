@@ -213,14 +213,19 @@ const YouTubePlaylistSection: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
-        <div>
-          <h2 className="text-2xl font-bold" style={{ color: cream }}>
-            YouTube Playlists
-          </h2>
-          <p className="text-sm font-light" style={{ color: greyText }}>
-            Endless playlists personalized for you
-          </p>
-        </div>
+       <motion.div
+        className="max-w-7xl mx-auto"
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 
+          className="text-4xl sm:text-5xl font-light mb-12 text-center"
+          style={{ color: cream }}
+        >
+          Youtube<span style={{ color: gold }}>.</span>Trending <span className="font-bold" style={{ color: gold }}>+</span> Videos
+        </h2>
+      </motion.div>
         
         {/* Header Arrows */}
         <div className="flex space-x-2">

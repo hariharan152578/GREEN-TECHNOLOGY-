@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -58,17 +59,19 @@ const TestimonialsSection: React.FC = () => {
         
         {/* --- Section Header (From Wireframe) --- */}
         <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-block px-8 py-3 rounded-lg shadow-md"
-            style={{ backgroundColor: COLORS.gold }}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold tracking-wider uppercase" style={{ color: COLORS.darkGreen }}>
-              Student Success Reels
-            </h2>
-          </motion.div>
+        <motion.div
+                className="max-w-7xl mx-auto"
+                initial={{ y: -30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 
+                  className="text-4xl sm:text-5xl font-light mb-12 text-center"
+                  style={{ color: COLORS.darkGreen }}
+                >
+                  Resource<span style={{ color: COLORS.gold }}>.</span>Library <span className="font-bold" style={{ color: COLORS.gold }}>+</span> Trending
+                </h2>
+              </motion.div>
         </div>
 
         {/* --- Reels Grid --- */}
