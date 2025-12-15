@@ -13,10 +13,10 @@ const COLORS = {
 // --- Helper Functions ---
 
 /**
- * Converts various YouTube URL formats (watch, short, share) into the correct iframe embed URL.
- * @param url The raw video URL.
- * @returns The standardized embed URL or the original URL if not YouTube.
- */
+ * Converts various YouTube URL formats (watch, short, share) into the correct iframe embed URL.
+ * @param url The raw video URL.
+ * @returns The standardized embed URL or the original URL if not YouTube.
+ */
 const getEmbedSource = (url: string) => {
     // Regex to reliably extract the video ID from standard, short, or Shorts URLs
     const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|v\/|embed\/|shorts\/))([^&\n?#]+)/;
@@ -33,23 +33,13 @@ const getEmbedSource = (url: string) => {
 };
 
 /**
- * Determines the Tailwind class for the aspect ratio of the thumbnail card based on the URL.
- * @returns The appropriate Tailwind aspect ratio class (always 16:9).
- */
-const getCardAspectRatio = (url: string) => {
-    return 'aspect-video'; // FORCE all thumbnails to Horizontal (Landscape: 16/9)
+ * Determines the Tailwind class for the aspect ratio of the thumbnail card based on the URL.
+ * @returns The appropriate Tailwind aspect ratio class (always 16:9).
+ */
+const getCardAspectRatio = () => {
+    // FORCE all thumbnails to Horizontal (Landscape: 16/9)
+    return 'aspect-video';
 };
-
-// Helper function to determine video type (kept for broader modal logic)
-const getVideoType = (url: string) => {
-    if (url.includes("youtube.com") || url.includes("youtu.be")) {
-        return "youtube";
-    }
-    if (url.includes("instagram.com")) {
-        return "instagram";
-    }
-    return "unknown";
-}
 
 
 // --- Dummy Testimonial Data ---
@@ -69,7 +59,7 @@ const test = [
     batch: "DevOps Batch '22",
     image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1888&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     quote: "The live projects were a game-changer for my career.",
-    // Vertical Short Link
+    // Vertical Short Link (This is a standard shortened URL, but the video content dictates the ratio)
     videoUrl: "https://youtu.be/5F_T23-l0L8",
   },
   {
@@ -132,8 +122,8 @@ const YoutubeSection: React.FC = () => {
     
     const url = selectedTestimonial.videoUrl;
 
-    // If it is a Short or youtu.be link, treat it as vertical (9/16)
-    if (url.includes("/shorts/") || url.includes("youtu.be/")) {
+    // Only treat it as vertical (9/16) if it explicitly contains the '/shorts/' path.
+    if (url.includes("/shorts/")) {
       return 'aspect-[9/16]'; 
     }
     // Otherwise, assume standard landscape video (16/9)
@@ -145,8 +135,8 @@ const YoutubeSection: React.FC = () => {
     if (!selectedTestimonial) return 'max-w-lg';
     const url = selectedTestimonial.videoUrl;
 
-    // Portrait videos (Shorts/Reels) should be narrower
-    if (url.includes("/shorts/") || url.includes("youtu.be/")) {
+    // Portrait videos (Shorts) should be narrower
+    if (url.includes("/shorts/")) {
       return 'max-w-xs md:max-w-sm'; 
     }
     // Landscape videos can be wider
@@ -197,10 +187,10 @@ const YoutubeSection: React.FC = () => {
                 transition={{ delay: index * 0.1, duration: 0.5 }}
                 whileHover={{ scale: 1.05 }}
                 // Item sizing: w-full (mobile), w-1/2 (tablet), w-1/3 (desktop)
-                className={`flex-shrink-0 w-1/5 sm:w-1/2 lg:w-1/3 p-3`}
+                className={`flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 p-3`}
               >
                 {/* Inner Card */}
-                <div className={`relative ${getCardAspectRatio(testimonial.videoUrl)} rounded-2xl overflow-hidden cursor-pointer shadow-xl group h-full`}>
+                <div className={`relative ${getCardAspectRatio()} rounded-2xl overflow-hidden cursor-pointer shadow-xl group h-full`}>
                   {/* Background Image (Thumbnail) */}
                   <img 
                     src={testimonial.image} 

@@ -13,11 +13,11 @@ const COLORS = {
 // --- Helper Functions ---
 
 /**
- * Converts various YouTube URL formats (watch, short, share) into the correct iframe embed URL.
- * This is crucial to prevent "refused to connect" errors in iframes.
- * @param url The raw video URL.
- * @returns The standardized embed URL or the original URL if not YouTube.
- */
+ * Converts various YouTube URL formats (watch, short, share) into the correct iframe embed URL.
+ * This is crucial to prevent "refused to connect" errors in iframes.
+ * @param url The raw video URL.
+ * @returns The standardized embed URL or the original URL if not YouTube.
+ */
 const getEmbedSource = (url: string) => {
     // Regex to capture the video ID from standard URLs, short links, or Shorts URLs
     const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|v\/|embed\/|shorts\/))([^&\n?#]+)/;
@@ -33,17 +33,7 @@ const getEmbedSource = (url: string) => {
     return url;
 };
 
-// Helper function to determine video type (kept for modal sizing logic)
-const getVideoType = (url: string) => {
-    if (url.includes("youtube.com") || url.includes("youtu.be")) {
-        return "youtube";
-    }
-    if (url.includes("instagram.com")) {
-        return "instagram";
-    }
-    return "unknown";
-}
-
+// REMOVED: 'getVideoType' function (TS6133) was unused in the current component logic.
 
 // --- Dummy Testimonial Data ---
 const testimonials = [
@@ -164,16 +154,16 @@ const TestimonialsSection: React.FC = () => {
         {/* --- Video Carousel Container (Refactored from Grid) --- */}
         <div className="relative overflow-hidden">
           {/* Carousel Track: 
-            - w-[500%] (1 item visible, 5/1 * 100%) for small screens.
-            - md:w-[250%] (2 items visible, 5/2 * 100%) for medium screens.
-            - lg:w-[167%] (3 items visible, 5/3 * 100%) for large screens.
-            - positionTransition={false} is added to resolve animation glitches during sliding.
-          */}
+            - w-[500%] (1 item visible, 5/1 * 100%) for small screens.
+            - md:w-[250%] (2 items visible, 5/2 * 100%) for medium screens.
+            - lg:w-[167%] (3 items visible, 5/3 * 100%) for large screens.
+            - positionTransition={false} is removed to fix the TS2322 error.
+          */}
           <motion.div
             className="flex w-[500%] md:w-[250%] lg:w-[167%]" 
             animate={{ x: `-${currentIndex * (100 / numItems)}%` }} 
             transition={{ type: "tween", duration: 0.5 }}
-            positionTransition={false} // FIX: Prevents layout glitches during carousel slide
+            // positionTransition={false} <-- REMOVED: Fixes TS2322 error
           >
             {testimonials.map((testimonial, index) => (
               <motion.div
