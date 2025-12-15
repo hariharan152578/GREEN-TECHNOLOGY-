@@ -9,7 +9,8 @@ import MaterialDownloadSection from '../section/MaterialDownloadSection';
 import TrustedCompaniesSection from '../section/TrustedCompaniesSection';
 import ContactSection from '../section/ContactSection';
 import CertificateSection from '../section/CertificateSection';
-import YouTubePlaylistSection from '../section/YouTubePlaylistSection';
+// import YouTubePlaylistSection from '../section/YouTubePlaylistSection';
+import YoutubeSection from '../section/YouTubePlaylistSection';
 
 const Home: React.FC = () => {
   return (
@@ -23,7 +24,7 @@ const Home: React.FC = () => {
         <CareerImpactSection/>
         <MaterialDownloadSection/>
         <TrustedCompaniesSection/>
-        <YouTubePlaylistSection/>
+        <YoutubeSection/>
         <CertificateSection/>
         <ContactSection/>
       </main>
