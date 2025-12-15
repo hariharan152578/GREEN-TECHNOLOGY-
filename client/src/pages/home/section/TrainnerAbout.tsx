@@ -6,7 +6,7 @@ import img2 from "../../../assets/img/hero1.png";
 import img3 from "../../../assets/img/hero2.png";
 import img4 from "../../../assets/img/hero3.png";
 
-const AboutSection: React.FC = () => {
+const TrainnerAbout: React.FC = () => {
 
   const mainImages = [mainImg, img2, img3, img4]; 
   const smallImages = [smallImg, img2, img3, img4]; 
@@ -183,79 +183,8 @@ const AboutSection: React.FC = () => {
         variants={containerVariants}
         className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
       >
-        {/* LEFT SIDE - Images */}
-        <div className="relative flex justify-center md:justify-start">
-          {/* Main Image Container - Cover full size */}
-          <motion.div
-            variants={imageContainerVariants}
-            className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative"
-          >
-            {/* Main Image Slideshow */}
-            <motion.img
-              key={currentMainImageIndex}
-              src={mainImages[currentMainImageIndex]}
-              alt={`About main ${currentMainImageIndex + 1}`}
-              className="w-full h-full object-cover"
-              variants={imageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              whileHover={{ scale: 1.03 }}
-              transition={{ duration: 0.3 }}
-            />
 
-            {/* Slideshow Indicators */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-              {mainImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentMainImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    index === currentMainImageIndex
-                      ? "bg-white w-6"
-                      : "bg-white/50"
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Small Image Container - Cover full size */}
-          <motion.div
-            variants={smallImageVariants}
-            whileHover="hover"
-            className="absolute bottom-[-50px] right-[-50px] z-10 rounded-xl overflow-hidden shadow-lg w-[120px] h-[100px] md:w-[200px] md:h-[150px] hidden md:block"
-          >
-            {/* Small Image Slideshow */}
-            <motion.img
-              key={currentSmallImageIndex}
-              src={smallImages[currentSmallImageIndex]}
-              alt={`About small ${currentSmallImageIndex + 1}`}
-              className="w-full h-full object-cover"
-              variants={smallImageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            />
-
-            {/* Small slideshow indicator */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
-              {smallImages.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-1 h-1 rounded-full ${
-                    index === currentSmallImageIndex
-                      ? "bg-white"
-                      : "bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* RIGHT SIDE - Content */}
+     {/* LEFT SIDE - Content */}
         <motion.div variants={contentVariants}>
           {/* Small Label */}
           <motion.div
@@ -334,9 +263,82 @@ const AboutSection: React.FC = () => {
             </button>
           </div>
         </motion.div>
+
+
+        {/* Right SIDE - Images */}
+        <div className="relative flex justify-center md:justify-start">
+          {/* Main Image Container - Cover full size */}
+          <motion.div
+            variants={imageContainerVariants}
+            className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative"
+          >
+            {/* Main Image Slideshow */}
+            <motion.img
+              key={currentMainImageIndex}
+              src={mainImages[currentMainImageIndex]}
+              alt={`About main ${currentMainImageIndex + 1}`}
+              className="w-full h-full object-cover"
+              variants={imageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              whileHover={{ scale: 1.03 }}
+              transition={{ duration: 0.3 }}
+            />
+
+            {/* Slideshow Indicators */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+              {mainImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentMainImageIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentMainImageIndex
+                      ? "bg-white w-6"
+                      : "bg-white/50"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Small Image Container - Cover full size */}
+          <motion.div
+            variants={smallImageVariants}
+            whileHover="hover"
+            className="absolute bottom-[-50px] right-[-50px] z-10 rounded-xl overflow-hidden shadow-lg w-[120px] h-[100px] md:w-[200px] md:h-[150px] hidden md:block"
+          >
+            {/* Small Image Slideshow */}
+            <motion.img
+              key={currentSmallImageIndex}
+              src={smallImages[currentSmallImageIndex]}
+              alt={`About small ${currentSmallImageIndex + 1}`}
+              className="w-full h-full object-cover"
+              variants={smallImageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            />
+
+            {/* Small slideshow indicator */}
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+              {smallImages.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-1 h-1 rounded-full ${
+                    index === currentSmallImageIndex
+                      ? "bg-white"
+                      : "bg-white/30"
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </motion.div>
     </motion.section>
   );
 };
 
-export default AboutSection;
+export default TrainnerAbout;
