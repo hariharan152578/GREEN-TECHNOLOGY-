@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Placeholder imports - ensure these paths match your project
-import hero1 from "../../../assets/img/hero1.png";
-import hero2 from "../../../assets/img/hero2.png";
-import hero3 from "../../../assets/img/hero3.png";
+
 import logo from "../../../assets/greenstechnologys_logo.png";
+const hero1 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+const hero2 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+const hero3 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 // --- Configuration ---
 const images: string[] = [hero1, hero2, hero3];
@@ -16,6 +17,7 @@ const COLORS = {
   gold: "#B99A49",
   cream: "#F0ECE3",
   white: "#FFFFFF",
+  gray: "#CCCCCC" // Added for form fields
 };
 
 // Animation Variants for the Floating Stack
@@ -37,6 +39,8 @@ const itemVariants = {
 
 const HeroSection: React.FC = () => {
   const [current, setCurrent] = useState<number>(0);
+  // 1. New State for Modal Visibility
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // Auto slide logic
   useEffect(() => {
@@ -57,6 +61,11 @@ const HeroSection: React.FC = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // 2. Function to toggle the Modal
+  const toggleModal = (): void => {
+      setIsModalOpen(prev => !prev);
+  }
 
   return (
     <div className="relative w-full flex flex-col font-sans">
@@ -135,8 +144,9 @@ const HeroSection: React.FC = () => {
               Join researchers, academicians, and professionals from around the world in a journey of excellence.
             </motion.p>
 
-            {/* CTA Button */}
+            {/* CTA Button - Updated to open modal */}
             <motion.button 
+              onClick={toggleModal} // <--- Added onClick handler
               whileHover={{ scale: 1.05, backgroundColor: COLORS.cream, color: COLORS.darkGreen }}
               whileTap={{ scale: 0.95 }}
               className="w-fit px-8 py-3 rounded-full font-bold text-lg shadow-xl transition-all border-2 border-transparent"
@@ -185,6 +195,7 @@ const HeroSection: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             className="cursor-pointer shadow-2xl rounded-full border-2 border-white/20"
             style={{ backgroundColor: COLORS.gold }}
+            onClick={toggleModal} // <--- Added onClick handler
         >
              <div 
                 className="py-6 px-3 flex items-center justify-center"
@@ -224,11 +235,14 @@ const HeroSection: React.FC = () => {
 
       </motion.div>
 
+      {/* 5. ENROLLMENT MODAL (POPUP) */}
+      <EnrollmentModal isOpen={isModalOpen} onClose={toggleModal} colors={COLORS} />
+
     </div>
   );
 };
 
-// --- Helper Component ---
+// --- Helper Component: Floating Button ---
 interface FloatingBtnProps {
     children: React.ReactNode;
     label: string;
@@ -267,6 +281,136 @@ const FloatingButton = ({ children, label, color, textColor, pulse = false }: Fl
             </motion.div>
         </motion.div>
     )
+}
+
+// --- Helper Component: Enrollment Modal ---
+interface ModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    colors: typeof COLORS;
+}
+
+const modalVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+};
+
+const formVariants = {
+    hidden: { y: "-100vh", opacity: 0 },
+    visible: { y: "0", opacity: 1, transition: { type: "spring", stiffness: 500, damping: 30 } },
+    exit: { y: "100vh", opacity: 0 },
+};
+
+const EnrollmentModal: React.FC<ModalProps> = ({ isOpen, onClose, colors }) => {
+    if (!isOpen) return null;
+
+    // Simple form submission handler
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        alert("Enrolment form submitted! We will contact you soon.");
+        onClose();
+    };
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    className="fixed inset-0 flex items-center justify-center z-[100] p-4 backdrop-blur-sm"
+                    style={{ backgroundColor: `${colors.darkGreen}C0` }} // Dark Green with transparency
+                    variants={modalVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    onClick={onClose} // Close on backdrop click
+                >
+                    <motion.div
+                        className="w-full max-w-lg p-8 rounded-xl shadow-2xl relative"
+                        style={{ backgroundColor: colors.cream, color: colors.darkGreen }}
+                        variants={formVariants}
+                        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the form
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 p-2 rounded-full transition-colors"
+                            style={{ backgroundColor: colors.darkGreen, color: colors.white }}
+                            aria-label="Close Enrollment Form"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+
+                        <h2 className="text-3xl font-bold mb-6 border-b pb-2" style={{ borderColor: colors.gold }}>
+                            Enrolment Form
+                        </h2>
+                        <p className="mb-4 text-sm opacity-80">
+                            Fill in your details, and an academic advisor will reach out to guide you through the process.
+                        </p>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    required
+                                    className="w-full p-3 rounded-md border"
+                                    style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }}
+                                    placeholder="John Doe"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium mb-1">Email Address</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    required
+                                    className="w-full p-3 rounded-md border"
+                                    style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }}
+                                    placeholder="john.doe@example.com"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    required
+                                    className="w-full p-3 rounded-md border"
+                                    style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }}
+                                    placeholder="+91-XXXXXXXXXX"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="course" className="block text-sm font-medium mb-1">Interested Course</label>
+                                <select
+                                    id="course"
+                                    required
+                                    className="w-full p-3 rounded-md border appearance-none"
+                                    style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }}
+                                >
+                                    <option value="">Select a course</option>
+                                    <option value="data-science">Data Science</option>
+                                    <option value="web-dev">Full Stack Web Development</option>
+                                    <option value="cyber-sec">Cyber Security</option>
+                                    <option value="ai-ml">AI/ML</option>
+                                </select>
+                            </div>
+                            
+                            <motion.button
+                                type="submit"
+                                whileHover={{ scale: 1.02, backgroundColor: colors.darkGreen, color: colors.gold }}
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full mt-6 py-3 rounded-full font-bold text-lg shadow-lg transition-all"
+                                style={{ backgroundColor: colors.gold, color: colors.darkGreen }}
+                            >
+                                Submit & Enrol
+                            </motion.button>
+                        </form>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
 }
 
 export default HeroSection;

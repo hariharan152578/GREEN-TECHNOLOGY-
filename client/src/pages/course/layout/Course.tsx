@@ -9,10 +9,9 @@ import TechStackSection from '../section/TechStackSection';
 import ProjectsSection from '../section/ProjectsSection';
 import TrustedCompaniesSection from '../section/TrustedCompaniesSection';
 import CertificateSection from '../section/CertificateSection';
-import TestimonialsSection from '../section/TestimonialsSection';
+// import TestimonialsSection from '../section/TestimonialsSection';
 import AboutSection from '../section/AboutSection';
 import ContactSection from '../section/ContactSection';
-import Footer from '../section/Footer';
 
 
 const course: React.FC = () => {
@@ -29,10 +28,9 @@ const course: React.FC = () => {
         <ProjectsSection/>
         <TrustedCompaniesSection/>
         <CertificateSection/>
-        <TestimonialsSection/>
+        {/* <TestimonialsSection/> */}
         <AboutSection/>
         <ContactSection/>
-        <Footer/>
       </main>
     </div>
   );
