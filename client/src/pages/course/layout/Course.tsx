@@ -12,6 +12,7 @@ import CertificateSection from '../section/CertificateSection';
 import TestimonialsSection from '../section/TestimonialsSection';
 import AboutSection from '../section/AboutSection';
 import ContactSection from '../section/ContactSection';
+import Footer from '../section/Footer';
 
 
 const course: React.FC = () => {
@@ -31,6 +32,7 @@ const course: React.FC = () => {
         <TestimonialsSection/>
         <AboutSection/>
         <ContactSection/>
+        <Footer/>
       </main>
     </div>
   );
