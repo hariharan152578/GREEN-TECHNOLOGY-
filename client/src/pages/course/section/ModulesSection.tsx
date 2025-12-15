@@ -7,7 +7,7 @@ const COLORS = {
   gold: "#B99A49",
   cream: "#F0ECE3",
   white: "#FFFFFF",
-  silver: "#E5E5E5", // Matching the grey tone in your wireframe
+  silver: "#E5E5E5",
 };
 
 // --- AWS Course Content Data ---
@@ -54,56 +54,58 @@ const ModulesSection: React.FC = () => {
   const [activeModule, setActiveModule] = useState(modules[0]);
 
   return (
-    <section className="relative w-full py-20 px-6 md:px-20 overflow-hidden" style={{ backgroundColor: COLORS.white }}>
+    <section className="relative w-full py-16 md:py-20 px-4 md:px-20 overflow-hidden" style={{ backgroundColor: COLORS.white }}>
       <div className="max-w-7xl mx-auto">
         
         {/* Section Heading */}
-        <div className="text-center mb-12">
-           <h2 className="text-3xl md:text-5xl font-bold mb-4" style={{ color: COLORS.darkGreen }}>
+        <div className="text-center mb-8 md:mb-12">
+           <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-3 md:mb-4" style={{ color: COLORS.darkGreen }}>
              AWS Solution Architect Curriculum
            </h2>
-           <p className="text-lg opacity-80" style={{ color: COLORS.darkGreen }}>
+           <p className="text-base md:text-lg opacity-80 max-w-2xl mx-auto" style={{ color: COLORS.darkGreen }}>
              A comprehensive deep-dive into the modules designed for certification.
            </p>
         </div>
 
-        {/* === MAIN CONTAINER (Gold Background from Wireframe) === */}
+        {/* === MAIN CONTAINER === */}
+        {/* Changed layout: flex-col on mobile, flex-row on large screens */}
         <div 
-          className="rounded-3xl p-6 md:p-12 shadow-2xl flex flex-col lg:flex-row gap-8"
+          className="rounded-3xl p-4 md:p-12 shadow-2xl flex flex-col lg:flex-row gap-6 md:gap-8"
           style={{ backgroundColor: COLORS.gold }}
         >
           
-          {/* === LEFT SIDEBAR: MODULE LIST (Silver/Grey Container) === */}
+          {/* === LEFT SIDEBAR: MODULE LIST === */}
+          {/* Mobile: Horizontal Scroll | Desktop: Vertical List */}
           <div 
-            className="w-full lg:w-1/3 rounded-2xl p-6 flex flex-col gap-4 h-fit"
+            className="w-full lg:w-1/3 rounded-2xl p-4 md:p-6 flex flex-row lg:flex-col gap-3 md:gap-4 overflow-x-auto lg:overflow-visible no-scrollbar snap-x"
             style={{ backgroundColor: COLORS.silver }}
           >
-            <h3 className="text-xl font-bold mb-2 pl-2" style={{ color: COLORS.darkGreen }}>Modules</h3>
+            <h3 className="hidden lg:block text-xl font-bold mb-2 pl-2" style={{ color: COLORS.darkGreen }}>Modules</h3>
             
             {modules.map((mod) => (
               <button
                 key={mod.id}
                 onClick={() => setActiveModule(mod)}
-                className={`text-left px-6 py-4 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-between items-center ${
-                  activeModule.id === mod.id ? "scale-105" : "hover:bg-white/50"
+                // Responsive styles: smaller padding on mobile, whitespace-nowrap for horizontal scroll
+                className={`flex-shrink-0 lg:flex-shrink snap-start text-left px-4 py-3 md:px-6 md:py-4 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-between items-center whitespace-nowrap lg:whitespace-normal ${
+                  activeModule.id === mod.id ? "scale-95 lg:scale-105 ring-2 ring-offset-2 ring-[#01311F]" : "hover:bg-white/50"
                 }`}
                 style={{
-                  // Active state gets Cream background, Inactive gets White
                   backgroundColor: activeModule.id === mod.id ? COLORS.darkGreen : COLORS.white,
                   color: activeModule.id === mod.id ? COLORS.gold : COLORS.darkGreen,
                 }}
               >
-                <span>Module {mod.id}: {mod.title}</span>
+                <span className="text-sm md:text-base">Module {mod.id}: {mod.title}</span>
                 {activeModule.id === mod.id && (
-                    <motion.span layoutId="activeDot" className="w-2 h-2 rounded-full bg-[#B99A49]" />
+                    <motion.span layoutId="activeDot" className="hidden lg:block w-2 h-2 rounded-full bg-[#B99A49]" />
                 )}
               </button>
             ))}
           </div>
 
-          {/* === RIGHT CONTENT: DETAILS PANEL (Dark Grey/Green Container) === */}
+          {/* === RIGHT CONTENT: DETAILS PANEL === */}
           <div 
-            className="w-full lg:w-2/3 rounded-2xl p-8 md:p-12 min-h-[400px] flex flex-col justify-center relative overflow-hidden"
+            className="w-full lg:w-2/3 rounded-2xl p-6 md:p-12 min-h-[350px] md:min-h-[400px] flex flex-col justify-center relative overflow-hidden"
             style={{ backgroundColor: COLORS.darkGreen }}
           >
             {/* Animated Content Switching */}
@@ -113,28 +115,34 @@ const ModulesSection: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.3 }}
                 className="relative z-10"
               >
                 {/* Module Header */}
-                <h3 className="text-4xl font-bold mb-6" style={{ color: COLORS.gold }}>
+                <div className="flex items-center gap-3 mb-4 md:mb-6">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#B99A49] text-[#01311F]">
+                        Module {activeModule.id}
+                    </span>
+                </div>
+                
+                <h3 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6" style={{ color: COLORS.gold }}>
                   {activeModule.title}
                 </h3>
                 
                 {/* Description */}
-                <p className="text-xl leading-relaxed mb-8 opacity-90" style={{ color: COLORS.cream }}>
+                <p className="text-base md:text-xl leading-relaxed mb-6 md:mb-8 opacity-90" style={{ color: COLORS.cream }}>
                   {activeModule.description}
                 </p>
 
                 {/* Topics List */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {activeModule.topics.map((topic, index) => (
                     <div 
                         key={index} 
-                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10"
+                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      <span className="text-md font-medium" style={{ color: COLORS.cream }}>{topic}</span>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span className="text-sm md:text-md font-medium" style={{ color: COLORS.cream }}>{topic}</span>
                     </div>
                   ))}
                 </div>
@@ -143,7 +151,7 @@ const ModulesSection: React.FC = () => {
 
             {/* Background Decoration Icon (Faded) */}
             <div className="absolute -bottom-10 -right-10 opacity-5 pointer-events-none">
-                <svg width="300" height="300" viewBox="0 0 24 24" fill={COLORS.white} stroke="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <svg width="200" height="200" viewBox="0 0 24 24" fill={COLORS.white} stroke="none" className="md:w-[300px] md:h-[300px]"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
 
           </div>

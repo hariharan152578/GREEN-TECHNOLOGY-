@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // --- Configuration ---
 const COLORS = {
@@ -9,154 +9,199 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
-// --- Project Data (AWS/DevOps Focus) ---
+// --- Project Data with Images ---
 const projects = [
   {
     id: 1,
     title: "Netflix Clone Hosting",
     description: "Host a high-traffic streaming site using S3 for storage and CloudFront for global content delivery.",
-    icon: "🎬",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbona3iDMFMKVhT8ACkE1CpVBRut5Xgh1nnQ&s",
     tech: ["S3", "CloudFront", "Route53"],
   },
   {
     id: 2,
     title: "Serverless Banking API",
     description: "Build a secure payment processing API that scales to zero when not in use.",
-    icon: "💳",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwCxJXty6yHNsNhYm0HyfVKKUhEjIn0e07vw&s",
     tech: ["Lambda", "API Gateway", "DynamoDB"],
   },
   {
     id: 3,
     title: "Auto-Scaling E-Com App",
     description: "Deploy a fault-tolerant shopping app that handles traffic spikes automatically.",
-    icon: "🛒",
-    tech: ["EC2", "Auto Scaling", "Load Balancer"],
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTghCBW4x9YJ5UQfP3I1xhIasJz46FIMVT-qA&s",
+    tech: ["EC2", "Auto Scaling", "ALB"],
   },
   {
     id: 4,
     title: "CI/CD Pipeline",
-    description: "Automate code deployment from GitHub to Production in minutes, not hours.",
-    icon: "🚀",
+    description: "Automate code deployment from GitHub to Production in minutes using a full DevOps pipeline.",
+    image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?q=80&w=2688&auto=format&fit=crop",
     tech: ["CodePipeline", "Jenkins", "Docker"],
   },
   {
     id: 5,
     title: "Containerized Chat App",
-    description: "Orchestrate a real-time chat application using microservices architecture.",
-    icon: "💬",
-    tech: ["ECS / EKS", "Fargate", "Socket.io"],
+    description: "Orchestrate a real-time chat application using microservices architecture on Kubernetes.",
+    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2574&auto=format&fit=crop",
+    tech: ["EKS", "Fargate", "Socket.io"],
+  },
+  {
+    id: 6,
+    title: "IoT Data Processor",
+    description: "Ingest and process millions of sensor data points in real-time using Kinesis and Lambda.",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2670&auto=format&fit=crop",
+    tech: ["IoT Core", "Kinesis", "Redshift"],
   },
 ];
 
-// --- Animation Variants ---
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-    },
-  },
-};
+// --- Card Component ---
+const ProjectCard = ({ project }: { project: typeof projects[0] }) => (
+  <div className="h-full bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col group cursor-pointer hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+    
+    {/* 1. Full Image Header */}
+    <div className="h-48 overflow-hidden relative">
+        <img 
+            src={project.image} 
+            alt={project.title} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        {/* Overlay gradient for text readability if needed, or just style */}
+        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all duration-300"></div>
+    </div>
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-};
-
-const ProjectsSection: React.FC = () => {
-  return (
-    <section 
-      className="relative w-full py-24 px-6 md:px-10 overflow-hidden" 
-      style={{ backgroundColor: COLORS.darkGreen }}
-    >
-      <div className="max-w-[1400px] mx-auto">
+    {/* 2. Content Body */}
+    <div className="p-6 flex-1 flex flex-col">
+        <h3 className="text-xl font-bold mb-3 line-clamp-1" style={{ color: COLORS.darkGreen }}>
+            {project.title}
+        </h3>
         
-        {/* --- HEADER (Matches Wireframe "PROJECTS" Box) --- */}
-        <div className="flex justify-center mb-16">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            className="px-10 py-4 rounded-lg shadow-lg"
-            style={{ backgroundColor: COLORS.gold }}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold tracking-widest uppercase" style={{ color: COLORS.darkGreen }}>
-              Live Projects
-            </h2>
-          </motion.div>
+        <p className="text-sm text-gray-600 mb-6 leading-relaxed flex-1 line-clamp-3">
+            {project.description}
+        </p>
+
+        {/* 3. Tech Stack Tags */}
+        <div className="flex flex-wrap gap-2 mb-6">
+            {project.tech.map((t, i) => (
+                <span 
+                    key={i} 
+                    className="text-[10px] font-bold px-3 py-1 rounded-full border bg-gray-50"
+                    style={{ borderColor: `${COLORS.darkGreen}20`, color: COLORS.darkGreen }}
+                >
+                    {t}
+                </span>
+            ))}
         </div>
 
-        {/* --- 5-COLUMN CARD GRID --- */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6"
-        >
-          {projects.map((project) => (
-            <motion.div
-              key={project.id}
-              variants={cardVariants}
-              whileHover={{ y: -15 }}
-              className="relative h-[380px] rounded-2xl p-6 flex flex-col justify-between overflow-hidden group transition-all duration-300"
-              style={{ backgroundColor: COLORS.cream }}
-            >
-              
-              {/* Top Content */}
-              <div>
-                {/* Icon Circle */}
-                <div 
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-6 shadow-md group-hover:scale-110 transition-transform duration-300"
-                  style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
+        {/* 4. Action Footer */}
+        <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between text-sm font-bold uppercase tracking-wider" style={{ color: COLORS.gold }}>
+            <span>View Case Study</span>
+            <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+        </div>
+    </div>
+  </div>
+);
+
+// --- Main Section Component ---
+const ProjectsSection: React.FC = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(3);
+
+  // Responsive Logic
+  useEffect(() => {
+    const handleResize = () => {
+      const newItems = window.innerWidth < 768 ? 1 : 3;
+      setItemsPerPage(newItems);
+      setCurrentIndex(0); // Reset to start
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const totalPages = Math.ceil(projects.length / itemsPerPage);
+
+  // Auto-Cycle Timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % totalPages);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [totalPages]);
+
+  const handleDotClick = (index: number) => {
+    setDirection(index > currentIndex ? 1 : -1);
+    setCurrentIndex(index);
+  };
+
+  // Slice visible items
+  const visibleProjects = projects.slice(
+    currentIndex * itemsPerPage,
+    (currentIndex + 1) * itemsPerPage
+  );
+
+  return (
+    <section 
+      className="relative w-full py-24 px-6 md:px-20 overflow-hidden" 
+      style={{ backgroundColor: COLORS.darkGreen }}
+    >
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#B99A49] opacity-[0.05] rounded-full blur-[100px]"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#B99A49] opacity-[0.03] rounded-full blur-[100px]"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        
+        {/* --- HEADER --- */}
+        <div className="flex flex-col items-start mb-16 text-left">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 leading-tight" style={{ color: COLORS.cream }}>
+            During the course, you will work on these projects
+          </h2>
+          <div className="w-24 h-1.5 rounded-full mb-4" style={{ backgroundColor: COLORS.gold }}></div>
+          <p className="text-base opacity-80 max-w-2xl" style={{ color: COLORS.cream }}>
+            Gain practical experience by building real-world, enterprise-grade applications from scratch.
+          </p>
+        </div>
+
+        {/* Carousel Grid */}
+        <div className="relative min-h-[500px]"> 
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+                <motion.div 
+                    key={currentIndex}
+                    custom={direction}
+                    initial={{ opacity: 0, x: direction > 0 ? 50 : -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: direction < 0 ? 50 : -50 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }}
+                    className={`grid gap-8 absolute w-full ${
+                        itemsPerPage === 1 ? 'grid-cols-1' : 'md:grid-cols-3'
+                    }`}
                 >
-                  {project.icon}
-                </div>
-                
-                <h3 className="text-xl font-bold mb-3 leading-tight" style={{ color: COLORS.darkGreen }}>
-                  {project.title}
-                </h3>
-                
-                <p className="text-sm opacity-80 leading-relaxed" style={{ color: COLORS.darkGreen }}>
-                  {project.description}
-                </p>
-              </div>
+                    {visibleProjects.map((project) => (
+                        <ProjectCard key={project.id} project={project} />
+                    ))}
+                </motion.div>
+            </AnimatePresence>
+        </div>
 
-              {/* Bottom Content (Tech Tags) */}
-              <div>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.tech.map((t, i) => (
-                    <span 
-                      key={i} 
-                      className="text-[10px] font-bold px-2 py-1 rounded border opacity-70"
-                      style={{ borderColor: COLORS.darkGreen, color: COLORS.darkGreen }}
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Hover Button */}
-                <button 
-                  className="w-full py-2 rounded-lg font-bold text-sm opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
-                  style={{ backgroundColor: COLORS.darkGreen, color: COLORS.gold }}
-                >
-                  View Case Study
-                </button>
-              </div>
-
-              {/* Decorative Gradient Overlay on Hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Mobile Scroll Hint (Optional) */}
-        <p className="text-center mt-8 text-sm opacity-50 md:hidden" style={{ color: COLORS.cream }}>
-          Swipe to see more projects →
-        </p>
+        {/* Pagination Dots */}
+        <div className="flex justify-center mt-12 gap-3">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+                <button
+                    key={idx}
+                    onClick={() => handleDotClick(idx)}
+                    className={`h-3 rounded-full transition-all duration-300 ${
+                        idx === currentIndex 
+                            ? "bg-[#B99A49] w-8" 
+                            : "bg-white/20 hover:bg-white/40 w-3"
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                />
+            ))}
+        </div>
 
       </div>
     </section>
