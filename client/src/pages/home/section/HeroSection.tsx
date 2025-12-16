@@ -1,9 +1,9 @@
 /* eslint-disable no-irregular-whitespace */
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-
+import { useNavigate } from "react-router-dom";
 // Placeholder imports - ensure these paths match your project
-import logo from "../../../assets/greenstechnologys_logo.png";
+import logo from "../../../assets/logo.png";
 const hero1 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 const hero2 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 const hero3 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -30,6 +30,7 @@ const HeroSection: React.FC = () => {
   const [current, setCurrent] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isStackOpen, setIsStackOpen] = useState<boolean>(false);
+  const Navigation=useNavigate();
 
   // Auto slide logic
   const prevSlide = (): void => {
@@ -126,7 +127,7 @@ const HeroSection: React.FC = () => {
             </motion.p>
 
             <motion.button 
-              onClick={toggleModal}
+              onClick={() => Navigation("/course")}
               whileHover={{ scale: 1.05, backgroundColor: COLORS.cream, color: COLORS.darkGreen }}
               whileTap={{ scale: 0.95 }}
               className="w-fit px-8 py-3 rounded-full font-bold text-lg shadow-xl transition-all border-2 border-transparent"
@@ -135,7 +136,7 @@ const HeroSection: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
             >
-              Enrol Now
+              Course
             </motion.button>
           </div>
         </div>
