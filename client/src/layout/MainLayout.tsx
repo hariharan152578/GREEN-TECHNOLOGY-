@@ -5,11 +5,11 @@ import Footer from "../components/Footer";
 import AdvertisementPopup from "../components/AdvertisementPopup";
 
 // Poster import
-import offerPoster from "../assets/img/hero3.png";
+// import offerPoster from "../assets/img/hero3.png";
 
 export const MainLayout = () => {
   const [showAd, setShowAd] = useState(false);
-
+  const offerPoster ="https://www.shutterstock.com/image-vector/special-offer-banner-vector-template-260nw-2474802375.jpg";
   useEffect(() => {
     // Show popup after 2 seconds
     const timer = setTimeout(() => {
