@@ -63,6 +63,12 @@ const dummyCourses: Course[] = [
 ];
 
 const CARD_COUNT = dummyCourses.length;
+const swipeConfidenceThreshold = 10000;
+
+// Helper function to calculate the "power" of the swipe
+const swipePower = (offset: number, velocity: number) => {
+  return Math.abs(offset) * velocity;
+};
 
 // --- 3. Framer Motion Variants ---
 const carouselVariants = (direction: number): Variants => ({
@@ -179,9 +185,30 @@ const CourseSection: React.FC = () => {
     });
   };
 
+  const handleDragEnd = (
+    event: MouseEvent | TouchEvent | PointerEvent, 
+    info: { offset: { x: number; y: number; }; velocity: { x: number; y: number; }; }
+  ) => {
+    // Determine the strength of the swipe
+    const swipe = swipePower(info.offset.x, info.velocity.x);
+
+    // Only apply swipe when a single item or a small group is visible
+    if (visibleCards < 3) {
+      if (swipe < -swipeConfidenceThreshold) {
+        // Swipe Left (Next Card)
+        paginate(1);
+      } else if (swipe > swipeConfidenceThreshold) {
+        // Swipe Right (Previous Card)
+        paginate(-1);
+      }
+      // If swipe strength is low, it snaps back due to dragConstraints
+    }
+  };
+
+
   const getVisibleCourses = () => {
     const indices = Array.from({ length: visibleCards }, (_, i) => 
-        (currentIndex + i) % CARD_COUNT
+      (currentIndex + i) % CARD_COUNT
     );
     return indices.map(index => dummyCourses[index]);
   };
@@ -190,7 +217,6 @@ const CourseSection: React.FC = () => {
   const totalDots = CARD_COUNT;
 
   return (
-    // FIX: Removed 'min-h-screen' and added 'pb-20' to fix excessive bottom space on mobile
     <div className="p-4 sm:p-10 font-sans pb-20" style={{ backgroundColor: darkGreen }}>
       
       {/* Header */}
@@ -211,7 +237,7 @@ const CourseSection: React.FC = () => {
       {/* Carousel Container */}
       <div className="max-w-7xl mx-auto relative flex items-center justify-center">
 
-        {/* Desktop Previous Button */}
+        {/* Desktop Previous Button (Hidden on Mobile/Tablet) */}
         <motion.button
           onClick={() => paginate(-1)}
           className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-20 p-3 rounded-full shadow-lg hidden lg:block"
@@ -222,55 +248,43 @@ const CourseSection: React.FC = () => {
           <FiChevronLeft className="w-6 h-6" />
         </motion.button>
         
-        {/* Course Cards Container */}
-        <div className="relative overflow-hidden w-full min-h-[450px] px-0 sm:px-6"> 
+        {/* Course Cards Container - Swipe Enabled */}
+        <motion.div 
+            className="relative overflow-hidden w-full min-h-[450px] px-0 sm:px-6"
+            drag="x" // Enable dragging on the x-axis
+            dragConstraints={{ left: 0, right: 0 }} // Constraints prevent the container from actually moving
+            dragElastic={1} // Makes the drag visual elastic
+            onDragEnd={handleDragEnd} // Handles the swipe logic
+        > 
           
-            {/* Mobile Navigation Overlay */}
-            <div className="absolute inset-y-0 flex justify-between items-center w-full lg:hidden z-10 pointer-events-none">
-                <motion.button
-                    onClick={() => paginate(-1)}
-                    className="p-2 ml-1 rounded-full shadow-md opacity-60 hover:opacity-100 transition-opacity pointer-events-auto"
-                    style={{ backgroundColor: gold, color: darkGreen }}
-                    whileTap={{ scale: 0.9 }}
-                >
-                    <FiChevronLeft className="w-5 h-5" />
-                </motion.button>
-                <motion.button
-                    onClick={() => paginate(1)}
-                    className="p-2 mr-1 rounded-full shadow-md opacity-60 hover:opacity-100 transition-opacity pointer-events-auto"
-                    style={{ backgroundColor: gold, color: darkGreen }}
-                    whileTap={{ scale: 0.9 }}
-                >
-                    <FiChevronRight className="w-5 h-5" />
-                </motion.button>
-            </div>
+          {/* MOBILE NAVIGATION OVERLAY REMOVED TO HIDE BUTTONS */}
 
           <AnimatePresence initial={false} custom={direction} mode='popLayout'>
-              <motion.div
-                  key={currentIndex}
-                  className={`grid gap-10 w-full ${
-                      visibleCards === 1 ? 'grid-cols-1' : 
-                      visibleCards === 2 ? 'grid-cols-2' : 
-                      'grid-cols-3'
-                  }`}
-                  custom={direction}
-                  variants={carouselVariants(direction)}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                      x: { type: "spring", stiffness: 300, damping: 30 },
-                      opacity: { duration: 0.2 }
-                  }}
-              >
-                  {visibleCourses.map((course) => (
-                      <CourseCard key={course.id} course={course} />
-                  ))}
-              </motion.div>
+            <motion.div
+              key={currentIndex}
+              className={`grid gap-10 w-full ${
+                  visibleCards === 1 ? 'grid-cols-1' : 
+                  visibleCards === 2 ? 'grid-cols-2' : 
+                  'grid-cols-3'
+              }`}
+              custom={direction}
+              variants={carouselVariants(direction)}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 }
+              }}
+            >
+              {visibleCourses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </motion.div>
           </AnimatePresence>
-        </div>
+        </motion.div>
 
-        {/* Desktop Next Button */}
+        {/* Desktop Next Button (Hidden on Mobile/Tablet) */}
         <motion.button
           onClick={() => paginate(1)}
           className="absolute -right-12 top-1/2 transform -translate-y-1/2 z-20 p-3 rounded-full shadow-lg hidden lg:block"
@@ -283,7 +297,7 @@ const CourseSection: React.FC = () => {
 
       </div>
       
-      {/* Pagination Dots */}
+      {/* Pagination Dots (Serve as the main navigation indicator on mobile now) */}
       <div className="flex justify-center mt-6 space-x-2"> 
         {Array.from({ length: totalDots }, (_, index) => (
           <motion.div
@@ -307,7 +321,7 @@ const CourseSection: React.FC = () => {
         ))}
       </div>
         
-      {/* Call to Action Button - Reduced margin for mobile */}
+      {/* Call to Action Button */}
       <div className="flex justify-center mt-8 sm:mt-12">
         <motion.button
           className="px-10 py-4 text-lg sm:text-xl font-bold rounded-full shadow-2xl text-center max-w-full"
