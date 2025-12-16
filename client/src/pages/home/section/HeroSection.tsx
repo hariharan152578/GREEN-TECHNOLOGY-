@@ -10,7 +10,6 @@ const hero3 = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80
 
 // --- Configuration ---
 const images: string[] = [hero1, hero2, hero3];
-
 // Color Palette Constants
 const COLORS = {
   darkGreen: "#01311F",
@@ -27,10 +26,10 @@ const itemVariants: Variants = {
 };
 
 const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
   const [current, setCurrent] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isStackOpen, setIsStackOpen] = useState<boolean>(false);
-  const Navigation=useNavigate();
 
   // Auto slide logic
   const prevSlide = (): void => {
@@ -45,6 +44,7 @@ const HeroSection: React.FC = () => {
     setIsModalOpen(prev => !prev);
   }
 
+  // Automatic image slider interval
   useEffect(() => {
     const interval = window.setInterval(() => {
       nextSlide();
@@ -95,13 +95,28 @@ const HeroSection: React.FC = () => {
         <div className="relative z-10 h-full flex items-center px-6 md:px-20">
           <div className="w-full md:w-2/3 flex flex-col justify-center text-left">
             
+           {/* Logo with Continuous Horizontal Spin Animation (Rotate Y) */}
             <motion.img 
               src={logo} 
               alt="Greens Tech Logo" 
               className="w-40 md:w-52 mb-6 drop-shadow-lg"
-              initial={{ opacity: 0, y: -30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
+              initial={{ opacity: 0, y: -30, rotateY: 0 }} // Initial state
+              animate={{ 
+                opacity: 1, 
+                y: 0, 
+                rotateY: 360 // Continuous rotation target on the Y-axis
+              }}
+              transition={{ 
+                // Initial fade-in and slide up
+                delay: 0.2, 
+                duration: 0.8, 
+                // Continuous rotation settings
+                rotateY: { // Specific transition for the rotateY property
+                    repeat: Infinity,
+                    duration: 5, // Faster spin for a horizontal flip effect
+                    ease: "linear",
+                }
+              }}
             />
 
             <div className="overflow-hidden">
@@ -127,7 +142,7 @@ const HeroSection: React.FC = () => {
             </motion.p>
 
             <motion.button 
-              onClick={() => Navigation("/course")}
+              onClick={()=>navigate("/course")}
               whileHover={{ scale: 1.05, backgroundColor: COLORS.cream, color: COLORS.darkGreen }}
               whileTap={{ scale: 0.95 }}
               className="w-fit px-8 py-3 rounded-full font-bold text-lg shadow-xl transition-all border-2 border-transparent"
@@ -136,7 +151,7 @@ const HeroSection: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
             >
-              Course
+              Enrol Now
             </motion.button>
           </div>
         </div>
@@ -173,7 +188,7 @@ const HeroSection: React.FC = () => {
             style={{ backgroundColor: COLORS.gold }}
             onClick={toggleModal}
         >
-             <div 
+            <div 
                 className="py-6 px-2 flex items-center justify-center"
                 style={{ 
                     color: COLORS.darkGreen,
@@ -289,8 +304,9 @@ const formVariants: Variants = {
 };
 
 const EnrollmentModal: React.FC<ModalProps> = ({ isOpen, onClose, colors }) => {
-    if (!isOpen) return null;
-
+    
+    // Using `isOpen` as the condition in AnimatePresence handles the exit animation
+    
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         alert("Enrolment form submitted! We will contact you soon.");
