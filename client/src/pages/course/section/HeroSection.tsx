@@ -1,6 +1,7 @@
 /* eslint-disable no-irregular-whitespace */
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
+import FaqChatbotModal from "../../../components/FaqChatbotModal";
 
 // Placeholder imports - ensure these paths match your project
 import logo from "../../../assets/logo.png";
@@ -26,10 +27,11 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 200 } },
 };
 
-const HeroSection: React.FC = () => {
+const HeroSection = () => {
   const [current, setCurrent] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isStackOpen, setIsStackOpen] = useState<boolean>(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false);
 
   // Auto slide logic
   const prevSlide = (): void => {
@@ -135,7 +137,7 @@ const HeroSection: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
             >
-              Enrol Now
+              Enroll  Now
             </motion.button>
           </div>
         </div>
@@ -196,7 +198,10 @@ const HeroSection: React.FC = () => {
               transition={{ duration: 0.2 }}
               className="flex flex-col gap-4 items-center mr-4" // Margin to align with round button
             >
-               <FloatingButton label="Chatbot" color={COLORS.cream} textColor={COLORS.darkGreen}>
+               <FloatingButton label="Chatbot" color={COLORS.cream} textColor={COLORS.darkGreen}  onClick={() => {
+    setIsStackOpen(true);
+    setIsChatbotOpen(true);
+  }}>
                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c-5.5 0-10 3.6-10 8 0 4.4 4.5 8 10 8a13 13 0 0 0 1.9-.1l4.8 2.8c.4.2 1-.1.9-.6l-.7-3.2c2-1.6 3.1-3.8 3.1-6.1 0-4.4-4.5-8-10-8Z"/></svg>
                </FloatingButton>
                
@@ -223,6 +228,12 @@ const HeroSection: React.FC = () => {
 
       {/* 5. ENROLLMENT MODAL */}
       <EnrollmentModal isOpen={isModalOpen} onClose={toggleModal} colors={COLORS} />
+      {/* 6. FAQ CHATBOT MODAL */}
+      <FaqChatbotModal
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        colors={COLORS}
+      />
 
     </div>
   );
@@ -230,44 +241,55 @@ const HeroSection: React.FC = () => {
 
 // --- Helper Component: Floating Button ---
 interface FloatingBtnProps {
-    children: React.ReactNode;
-    label: string;
-    color: string;
-    textColor: string;
-    pulse?: boolean;
+  children: React.ReactNode;
+  label: string;
+  color: string;
+  textColor: string;
+  pulse?: boolean;
+  onClick?: () => void;
 }
 
-const FloatingButton = ({ children, label, color, textColor, pulse = false }: FloatingBtnProps) => {
-    return (
-        <motion.div 
-            variants={itemVariants}
-            className="flex items-center gap-2 cursor-pointer group relative"
-        >
-            {/* Tooltip Label */}
-            <span 
-                className="absolute right-14 bg-white px-3 py-1 rounded-md text-xs font-bold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap"
-                style={{ color: COLORS.darkGreen }}
-            >
-                {label}
-            </span>
 
-            <motion.div 
-                whileHover={{ scale: 1.1 }}
-                animate={pulse ? { 
-                    boxShadow: [`0 0 0 0px ${color}80`, `0 0 0 10px ${color}00`],
-                } : {}}
-                transition={pulse ? { 
-                    repeat: Infinity, 
-                    duration: 1.5 
-                } : {}}
-                className="w-14 h-14 rounded-full shadow-xl flex items-center justify-center relative z-10"
-                style={{ backgroundColor: color, color: textColor }}
-            >
-                {children}
-            </motion.div>
-        </motion.div>
-    )
-}
+const FloatingButton = ({
+  children,
+  label,
+  color,
+  textColor,
+  pulse = false,
+  onClick
+}: FloatingBtnProps) => {
+  return (
+    <motion.div
+      variants={itemVariants}
+      onClick={onClick}
+      className="flex items-center gap-2 cursor-pointer group relative"
+    >
+      {/* Tooltip Label */}
+      <span 
+        className="absolute right-14 bg-white px-3 py-1 rounded-md text-xs font-bold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap"
+        style={{ color: COLORS.darkGreen }}
+      >
+        {label}
+      </span>
+
+      <motion.div 
+        whileHover={{ scale: 1.1 }}
+        animate={pulse ? { 
+          boxShadow: [`0 0 0 0px ${color}80`, `0 0 0 10px ${color}00`],
+        } : {}}
+        transition={pulse ? { 
+          repeat: Infinity, 
+          duration: 1.5 
+        } : {}}
+        className="w-14 h-14 rounded-full shadow-xl flex items-center justify-center relative z-10"
+        style={{ backgroundColor: color, color: textColor }}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+};
+
 
 // --- Helper Component: Enrollment Modal ---
 interface ModalProps {
@@ -370,5 +392,6 @@ const EnrollmentModal: React.FC<ModalProps> = ({ isOpen, onClose, colors }) => {
         </AnimatePresence>
     );
 }
+
 
 export default HeroSection;
