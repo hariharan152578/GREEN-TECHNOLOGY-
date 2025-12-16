@@ -1,18 +1,19 @@
 import { Outlet } from "react-router-dom"
 import Navbar from "../components/Navbar"
+import Footer from "../components/Footer"
 
 export const MainLayout = () => {
   return (
     <>
-      {/* Sticky Navbar */}
       <div className="sticky top-0 z-50">
         <Navbar />
       </div>
 
-      {/* Page Content */}
-      <main className="">
+      <main>
         <Outlet />
       </main>
+
+      <Footer />
     </>
   )
 }

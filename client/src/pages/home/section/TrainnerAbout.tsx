@@ -1,16 +1,15 @@
 /* eslint-disable no-irregular-whitespace */
-import { motion, AnimatePresence, type Variants } from "framer-motion"; // Added AnimatePresence and type Variants
+import { motion, AnimatePresence, type Variants } from "framer-motion"; 
 import { useState, useEffect } from "react";
-import React from "react"; // Added explicit React import for best practice
+import React from "react"; // Added explicit React import
+
+const TrainnerAbout: React.FC = () => {
 
 const mainImg ="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 const smallImg ="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 const img2="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 const img3="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 const img4="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-
-const AboutSection: React.FC = () => {
-
   const mainImages = [mainImg, img2, img3, img4]; 
   const smallImages = [smallImg, img2, img3, img4]; 
   const [currentMainImageIndex, setCurrentMainImageIndex] = useState(0);
@@ -43,7 +42,7 @@ const AboutSection: React.FC = () => {
   }, [smallImages.length]);
 
   // Animation variants
-  const containerVariants: Variants = {
+  const containerVariants: Variants = { // Explicitly typing Variants
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -54,7 +53,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const imageContainerVariants: Variants = {
+  const imageContainerVariants: Variants = { // Explicitly typing Variants
     hidden: { opacity: 0, scale: 0.9, x: -50 },
     visible: {
       opacity: 1,
@@ -67,7 +66,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const imageVariants: Variants = {
+  const imageVariants: Variants = { // Explicitly typing Variants
     initial: { opacity: 0, scale: 1.1 },
     animate: {
       opacity: 1,
@@ -87,7 +86,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const smallImageVariants: Variants = {
+  const smallImageVariants: Variants = { // Explicitly typing Variants
     initial: { opacity: 0, scale: 0.95, rotate: -5 },
     animate: {
       opacity: 1,
@@ -114,7 +113,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const contentVariants: Variants = {
+  const contentVariants: Variants = { // Explicitly typing Variants
     hidden: { opacity: 0, y: 50 },
     visible: {
       opacity: 1,
@@ -126,7 +125,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const lineVariants: Variants = {
+  const lineVariants: Variants = { // Explicitly typing Variants
     hidden: { width: 0 },
     visible: {
       width: "2.5rem",
@@ -138,7 +137,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const textVariants: Variants = {
+  const textVariants: Variants = { // Explicitly typing Variants
     hidden: { opacity: 0, x: -20 },
     visible: {
       opacity: 1,
@@ -150,7 +149,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const headingVariants: Variants = {
+  const headingVariants: Variants = { // Explicitly typing Variants
     hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
@@ -163,7 +162,7 @@ const AboutSection: React.FC = () => {
     }
   };
 
-  const paragraphVariants: Variants = {
+  const paragraphVariants: Variants = { // Explicitly typing Variants
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -186,83 +185,8 @@ const AboutSection: React.FC = () => {
         variants={containerVariants}
         className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
       >
-        {/* LEFT SIDE - Images */}
-        <div className="relative flex justify-center md:justify-start">
-          {/* Main Image Container - Cover full size */}
-          <motion.div
-            variants={imageContainerVariants}
-            className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative"
-          >
-                <AnimatePresence mode="wait">
-            {/* Main Image Slideshow */}
-              <motion.img
-                key={currentMainImageIndex}
-                src={mainImages[currentMainImageIndex]}
-                alt={`About main ${currentMainImageIndex + 1}`}
-                className="w-full h-full object-cover absolute top-0 left-0" // Added position absolute for AnimatePresence
-                variants={imageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                whileHover={{ scale: 1.03 }}
-                transition={{ duration: 0.3 }}
-              />
-                </AnimatePresence>
 
-            {/* Slideshow Indicators */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
-              {mainImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentMainImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    index === currentMainImageIndex
-                      ? "bg-white w-6"
-                      : "bg-white/50"
-                  }`}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Small Image Container - Cover full size */}
-          <motion.div
-            variants={smallImageVariants}
-            whileHover="hover"
-            className="absolute bottom-[-50px] right-[-50px] z-10 rounded-xl overflow-hidden shadow-lg w-[120px] h-[100px] md:w-[200px] md:h-[150px] hidden md:block"
-          >
-                <AnimatePresence mode="wait">
-            {/* Small Image Slideshow */}
-              <motion.img
-                key={currentSmallImageIndex}
-                src={smallImages[currentSmallImageIndex]}
-                alt={`About small ${currentSmallImageIndex + 1}`}
-                className="w-full h-full object-cover absolute top-0 left-0" // Added position absolute for AnimatePresence
-                variants={smallImageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              />
-                </AnimatePresence>
-
-            {/* Small slideshow indicator */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-20">
-              {smallImages.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-1 h-1 rounded-full ${
-                    index === currentSmallImageIndex
-                      ? "bg-white"
-                      : "bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* RIGHT SIDE - Content */}
+     {/* LEFT SIDE - Content */}
         <motion.div variants={contentVariants}>
           {/* Small Label */}
           <motion.div
@@ -341,9 +265,87 @@ const AboutSection: React.FC = () => {
             </button>
           </div>
         </motion.div>
+
+
+        {/* Right SIDE - Images */}
+        <div className="relative flex justify-center md:justify-start">
+          {/* Main Image Container - Cover full size */}
+          <motion.div
+            variants={imageContainerVariants}
+            className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative"
+          >
+            {/* Main Image Slideshow */}
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentMainImageIndex}
+                src={mainImages[currentMainImageIndex]}
+                alt={`About main ${currentMainImageIndex + 1}`}
+                className="w-full h-full object-cover absolute top-0 left-0" // Added positioning for AnimatePresence to work
+                variants={imageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.3 }}
+              />
+            </AnimatePresence>
+
+
+            {/* Slideshow Indicators */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+              {mainImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentMainImageIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentMainImageIndex
+                      ? "bg-white w-6"
+                      : "bg-white/50"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Small Image Container - Cover full size */}
+          <motion.div
+            variants={smallImageVariants}
+            whileHover="hover"
+            className="absolute bottom-[-50px] right-[-50px] z-10 rounded-xl overflow-hidden shadow-lg w-[120px] h-[100px] md:w-[200px] md:h-[150px] hidden md:block"
+          >
+            {/* Small Image Slideshow */}
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentSmallImageIndex}
+                src={smallImages[currentSmallImageIndex]}
+                alt={`About small ${currentSmallImageIndex + 1}`}
+                className="w-full h-full object-cover absolute top-0 left-0" // Added positioning for AnimatePresence to work
+                variants={smallImageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              />
+            </AnimatePresence>
+
+            {/* Small slideshow indicator */}
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-20">
+              {smallImages.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-1 h-1 rounded-full ${
+                    index === currentSmallImageIndex
+                      ? "bg-white"
+                      : "bg-white/30"
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </div>
       </motion.div>
     </motion.section>
   );
 };
 
-export default AboutSection;
+export default TrainnerAbout;

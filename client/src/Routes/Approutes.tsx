@@ -1,6 +1,6 @@
 import { Routes , Route} from "react-router-dom"
 import Home from "../pages/home/layout/Home"
-import Course from "../pages/course/layout/course"
+import Course from "../pages/course/layout/Course"
 import { MainLayout } from "../layout/MainLayout"
 
 const Approutes = () => {
