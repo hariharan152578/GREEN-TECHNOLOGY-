@@ -22,7 +22,7 @@ const dnaHelixVariants: Variants = {
   hidden: (i: number) => ({
     opacity: 0,
     x: 50,
-    y: i % 2 === 0 ? -100 : 100,
+    y: -20, // Slide from top slightly
     rotate: 180,
     scale: 0.2,
   }),
@@ -43,7 +43,7 @@ const dnaHelixVariants: Variants = {
   exit: (i: number) => ({
     opacity: 0,
     x: 50,
-    y: i % 2 === 0 ? -100 : 100,
+    y: -20,
     rotate: -180,
     scale: 0.2,
     transition: { duration: 0.3, delay: i * 0.05 }
@@ -181,10 +181,51 @@ export const MainLayout = () => {
 
       {/* --- FLOATING COMPONENTS --- */}
       
-      {/* 1. FLOATING STACK (Right Margin) */}
+      {/* 1. FLOATING STACK CONTAINER (Right Margin) */}
       <div className="fixed bottom-10 right-0 z-[60] flex flex-col items-end gap-4 font-sans pr-4">
         
-        {/* Hidden Items Container (Chat & Whatsapp) - Appears at the TOP of the stack */}
+        {/* ORDER 1: Enquiry Form - Infinity Symbol (TOP) */}
+        <motion.div
+            variants={infinityEnquiryVariants}
+            initial="initial"
+            animate="animate"
+            whileHover="hover"
+            whileTap={{ scale: 0.95 }}
+            className="cursor-pointer shadow-2xl rounded-l-2xl border-l-4 border-y-4 border-white/20 flex items-center justify-center relative overflow-hidden -mr-4" // Negative margin to align with edge
+            style={{ backgroundColor: COLORS.gold }}
+            onClick={toggleModal}
+        >
+            <motion.svg 
+                width="60" 
+                height="80" 
+                className="absolute"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+                <path
+                    d="M20 40 Q30 20 40 40 Q50 60 60 40 M60 40 Q50 20 40 40 Q30 60 20 40"
+                    fill="none"
+                    stroke={COLORS.darkGreen}
+                    strokeWidth="2"
+                />
+            </motion.svg>
+            
+            <div 
+                className="py-6 px-2 flex items-center justify-center z-10"
+                style={{ 
+                    color: COLORS.darkGreen,
+                    writingMode: "vertical-rl", 
+                    textOrientation: "mixed"
+                }}
+            >
+                <span className="font-bold tracking-widest text-xs whitespace-nowrap transform rotate-180">
+                    ENQUIRY FORM
+                </span>
+            </div>
+        </motion.div>
+
+        {/* ORDER 2: Hidden Items Container (Chat & Whatsapp) - (MIDDLE) */}
         <AnimatePresence>
           {isStackOpen && (
             <motion.div 
@@ -194,7 +235,7 @@ export const MainLayout = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="flex flex-col gap-6 items-end mr-2 mb-2"
+              className="flex flex-col gap-6 items-end mr-2"
             >
                {/* Chatbot Trigger */}
                <motion.div 
@@ -248,95 +289,51 @@ export const MainLayout = () => {
           )}
         </AnimatePresence>
 
-        <div className="flex flex-col items-end gap-4">
-            
-            {/* Enquiry Form - Infinity Symbol (MOVED UP) */}
-            <motion.div
-                variants={infinityEnquiryVariants}
-                initial="initial"
-                animate="animate"
-                whileHover="hover"
-                whileTap={{ scale: 0.95 }}
-                className="cursor-pointer shadow-2xl rounded-l-2xl border-l-4 border-y-4 border-white/20 flex items-center justify-center relative overflow-hidden -mr-4" // Negative margin to align with edge
-                style={{ backgroundColor: COLORS.gold }}
-                onClick={toggleModal}
-            >
-                <motion.svg 
-                    width="60" 
-                    height="80" 
-                    className="absolute"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                >
-                    <path
-                        d="M20 40 Q30 20 40 40 Q50 60 60 40 M60 40 Q50 20 40 40 Q30 60 20 40"
-                        fill="none"
-                        stroke={COLORS.darkGreen}
-                        strokeWidth="2"
-                    />
-                </motion.svg>
-                
-                <div 
-                    className="py-6 px-2 flex items-center justify-center z-10"
-                    style={{ 
-                        color: COLORS.darkGreen,
-                        writingMode: "vertical-rl", 
-                        textOrientation: "mixed"
-                    }}
-                >
-                    <span className="font-bold tracking-widest text-xs whitespace-nowrap transform rotate-180">
-                        ENQUIRY FORM
-                    </span>
-                </div>
-            </motion.div>
-
-            {/* Main Stack Toggle Button (MOVED DOWN) */}
-            <motion.button 
-                onClick={() => setIsStackOpen(!isStackOpen)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                animate={{ 
-                    rotate: isStackOpen ? 180 : 0,
+        {/* ORDER 3: Main Stack Toggle Button - (BOTTOM) */}
+        <motion.button 
+            onClick={() => setIsStackOpen(!isStackOpen)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            animate={{ 
+                rotate: isStackOpen ? 180 : 0,
+            }}
+            transition={{
+                rotate: { type: "spring", stiffness: 200, damping: 15 }
+            }}
+            className="mr-2 p-4 rounded-full shadow-2xl border-2 border-transparent relative z-50 overflow-hidden"
+            style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
+        >
+            {/* Magnetic Field Rings */}
+            <motion.div 
+                className="absolute inset-0 rounded-full border-2"
+                style={{ borderColor: COLORS.gold }}
+                animate={{
+                    scale: [1, 1.5, 2],
+                    opacity: [0.7, 0.4, 0],
                 }}
                 transition={{
-                    rotate: { type: "spring", stiffness: 200, damping: 15 }
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeOut"
                 }}
-                className="mr-2 p-4 rounded-full shadow-2xl border-2 border-transparent relative z-50 overflow-hidden"
-                style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
-            >
-                {/* Magnetic Field Rings */}
-                <motion.div 
-                    className="absolute inset-0 rounded-full border-2"
-                    style={{ borderColor: COLORS.gold }}
-                    animate={{
-                        scale: [1, 1.5, 2],
-                        opacity: [0.7, 0.4, 0],
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeOut"
-                    }}
-                />
-                <motion.div 
-                    className="absolute inset-0 rounded-full border-2"
-                    style={{ borderColor: COLORS.gold }}
-                    animate={{
-                        scale: [1, 1.8, 2.2],
-                        opacity: [0.5, 0.2, 0],
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeOut",
-                        delay: 0.5
-                    }}
-                />
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-            </motion.button>
-            
-        </div>
+            />
+            <motion.div 
+                className="absolute inset-0 rounded-full border-2"
+                style={{ borderColor: COLORS.gold }}
+                animate={{
+                    scale: [1, 1.8, 2.2],
+                    opacity: [0.5, 0.2, 0],
+                }}
+                transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeOut",
+                    delay: 0.5
+                }}
+            />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        </motion.button>
+        
       </div>
 
       {/* --- MODALS --- */}
