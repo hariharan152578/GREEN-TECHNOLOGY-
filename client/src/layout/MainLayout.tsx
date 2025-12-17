@@ -4,6 +4,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AdvertisementPopup from "../components/AdvertisementPopup";
+import FaqChatbotModal from "../components/FaqChatbotModal";
 
 // --- Color Palette Constants ---
 const COLORS = {
@@ -14,7 +15,7 @@ const COLORS = {
   gray: "#CCCCCC"
 };
 
-// --- ANIMATION VARIANTS (Moved from Hero) ---
+// --- ANIMATION VARIANTS ---
 
 // 1. DNA HELIX SPIRAL for Stack Items
 const dnaHelixVariants: Variants = {
@@ -123,10 +124,9 @@ export const MainLayout = () => {
   const offerPoster = "https://www.shutterstock.com/image-vector/special-offer-banner-vector-template-260nw-2474802375.jpg";
 
   // --- STATE FOR FLOATING UI ---
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isStackOpen, setIsStackOpen] = useState<boolean>(false);
-  const [activeChat, setActiveChat] = useState<boolean>(false);
-  const [chatMessage, setChatMessage] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // For Enquiry
+  const [isStackOpen, setIsStackOpen] = useState<boolean>(false); // For Floating Buttons
+  const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false); // For FAQ Chatbot
 
   // --- LOGIC FOR FLOATING UI ---
   const toggleModal = (): void => {
@@ -134,20 +134,17 @@ export const MainLayout = () => {
   };
 
   const toggleChat = (): void => {
-    setActiveChat(prev => !prev);
+    setIsChatbotOpen(prev => !prev);
+    // Optionally close the stack when chat opens to keep UI clean
+    if (!isChatbotOpen) setIsStackOpen(false); 
   };
 
-  const sendMessage = (): void => {
-    if (chatMessage.trim()) {
-      console.log("Message sent:", chatMessage);
-      setChatMessage("");
-      setTimeout(() => {
-        alert("Thanks for your message! Our team will respond shortly.");
-      }, 500);
-    }
+  const handleWhatsApp = (): void => {
+    // Replace with your actual WhatsApp link
+    window.open("https://wa.me/1234567890", "_blank");
   };
 
-  // Listen for "Enrol Now" clicks from other components (like Hero)
+  // Listen for "Enrol Now" clicks from other components
   useEffect(() => {
     const handleEnrolEvent = () => setIsModalOpen(true);
     window.addEventListener('open-enrolment', handleEnrolEvent);
@@ -178,57 +175,16 @@ export const MainLayout = () => {
       </div>
 
       {/* Main Content */}
-      <main className="relative">
+      <main className="relative min-h-screen">
         <Outlet />
       </main>
 
-      {/* --- FLOATING COMPONENTS (Moved Here) --- */}
+      {/* --- FLOATING COMPONENTS --- */}
       
       {/* 1. FLOATING STACK (Right Margin) */}
-      <div className="fixed bottom-10 right-0 z-[60] flex flex-col items-end gap-4 font-sans">
+      <div className="fixed bottom-10 right-0 z-[60] flex flex-col items-end gap-4 font-sans pr-4">
         
-        {/* Enquiry Form - Infinity Symbol */}
-        <motion.div
-            variants={infinityEnquiryVariants}
-            initial="initial"
-            animate="animate"
-            whileHover="hover"
-            whileTap={{ scale: 0.95 }}
-            className="cursor-pointer shadow-2xl rounded-l-2xl border-l-4 border-y-4 border-white/20 flex items-center justify-center relative overflow-hidden"
-            style={{ backgroundColor: COLORS.gold }}
-            onClick={toggleModal}
-        >
-            <motion.svg 
-                width="60" 
-                height="80" 
-                className="absolute"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-                <path
-                    d="M20 40 Q30 20 40 40 Q50 60 60 40 M60 40 Q50 20 40 40 Q30 60 20 40"
-                    fill="none"
-                    stroke={COLORS.darkGreen}
-                    strokeWidth="2"
-                />
-            </motion.svg>
-            
-            <div 
-                className="py-6 px-2 flex items-center justify-center z-10"
-                style={{ 
-                    color: COLORS.darkGreen,
-                    writingMode: "vertical-rl", 
-                    textOrientation: "mixed"
-                }}
-            >
-                <span className="font-bold tracking-widest text-xs whitespace-nowrap transform rotate-180">
-                    ENQUIRY FORM
-                </span>
-            </div>
-        </motion.div>
-
-        {/* Hidden Items Container (Chat & Whatsapp) */}
+        {/* Hidden Items Container (Chat & Whatsapp) - Appears at the TOP of the stack */}
         <AnimatePresence>
           {isStackOpen && (
             <motion.div 
@@ -237,126 +193,170 @@ export const MainLayout = () => {
               }}
               initial="hidden"
               animate="visible"
-              exit="hidden"
-              className="flex flex-col gap-6 items-center mr-4"
+              exit="exit"
+              className="flex flex-col gap-6 items-end mr-2 mb-2"
             >
-               {/* Chatbot */}
+               {/* Chatbot Trigger */}
                <motion.div 
-                  custom={0}
-                  variants={dnaHelixVariants}
-                  className="relative group"
+                 custom={0}
+                 variants={dnaHelixVariants}
+                 className="relative group"
                >
-                  <motion.div
-                      variants={messageFloatVariants}
-                      initial="initial"
-                      animate="animate"
-                      className="absolute -top-16 -right-4 bg-white px-4 py-2 rounded-lg shadow-lg z-20"
-                      style={{ color: COLORS.darkGreen }}
-                  >
-                      <span className="text-xs font-bold">Hi! Need help?</span>
-                      <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent" style={{ borderTopColor: COLORS.white }} />
-                  </motion.div>
-                  
-                  <FloatingButton 
-                      label="AI Chatbot" 
-                      color={COLORS.cream} 
-                      textColor={COLORS.darkGreen}
-                      onClick={toggleChat}
-                  >
-                      <motion.div
-                          animate={{ rotate: [0, 20, -20, 0] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                      >
-                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c-5.5 0-10 3.6-10 8 0 4.4 4.5 8 10 8a13 13 0 0 0 1.9-.1l4.8 2.8c.4.2 1-.1.9-.6l-.7-3.2c2-1.6 3.1-3.8 3.1-6.1 0-4.4-4.5-8-10-8Z"/></svg>
-                      </motion.div>
-                  </FloatingButton>
+                 <motion.div
+                     variants={messageFloatVariants}
+                     initial="initial"
+                     animate="animate"
+                     className="absolute -top-16 -right-4 bg-white px-4 py-2 rounded-lg shadow-lg z-20 whitespace-nowrap"
+                     style={{ color: COLORS.darkGreen }}
+                 >
+                     <span className="text-xs font-bold">Hi! Need help?</span>
+                     <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent" style={{ borderTopColor: COLORS.white }} />
+                 </motion.div>
+                 
+                 <FloatingButton 
+                     label="AI Chatbot" 
+                     color={COLORS.cream} 
+                     textColor={COLORS.darkGreen}
+                     onClick={toggleChat} 
+                 >
+                     <motion.div
+                         animate={{ rotate: [0, 20, -20, 0] }}
+                         transition={{ duration: 2, repeat: Infinity }}
+                     >
+                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c-5.5 0-10 3.6-10 8 0 4.4 4.5 8 10 8a13 13 0 0 0 1.9-.1l4.8 2.8c.4.2 1-.1.9-.6l-.7-3.2c2-1.6 3.1-3.8 3.1-6.1 0-4.4-4.5-8-10-8Z"/></svg>
+                     </motion.div>
+                 </FloatingButton>
                </motion.div>
                
-               {/* WhatsApp */}
+               {/* WhatsApp Trigger */}
                <motion.div 
-                  custom={1}
-                  variants={dnaHelixVariants}
+                 custom={1}
+                 variants={dnaHelixVariants}
                >
-                  <FloatingButton 
-                      label="WhatsApp" 
-                      color={COLORS.gold} 
-                      textColor={COLORS.darkGreen} 
-                      variants={neonPulseVariants}
-                      pulse={true}
-                  >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
-                  </FloatingButton>
+                 <FloatingButton 
+                     label="WhatsApp" 
+                     color={COLORS.gold} 
+                     textColor={COLORS.darkGreen} 
+                     variants={neonPulseVariants}
+                     pulse={true}
+                     onClick={handleWhatsApp}
+                 >
+                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
+                 </FloatingButton>
                </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Main Stack Toggle Button */}
-        <motion.button 
-            onClick={() => setIsStackOpen(!isStackOpen)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            animate={{ 
-                rotate: isStackOpen ? 180 : 0,
-            }}
-            transition={{
-                rotate: { type: "spring", stiffness: 200, damping: 15 }
-            }}
-            className="mr-4 p-4 rounded-full shadow-2xl border-2 border-transparent relative z-50 overflow-hidden"
-            style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
-        >
-            {/* Magnetic Field Rings */}
-            <motion.div 
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: COLORS.gold }}
-                animate={{
-                    scale: [1, 1.5, 2],
-                    opacity: [0.7, 0.4, 0],
+        <div className="flex flex-col items-end gap-4">
+            
+            {/* Enquiry Form - Infinity Symbol (MOVED UP) */}
+            <motion.div
+                variants={infinityEnquiryVariants}
+                initial="initial"
+                animate="animate"
+                whileHover="hover"
+                whileTap={{ scale: 0.95 }}
+                className="cursor-pointer shadow-2xl rounded-l-2xl border-l-4 border-y-4 border-white/20 flex items-center justify-center relative overflow-hidden -mr-4" // Negative margin to align with edge
+                style={{ backgroundColor: COLORS.gold }}
+                onClick={toggleModal}
+            >
+                <motion.svg 
+                    width="60" 
+                    height="80" 
+                    className="absolute"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                    <path
+                        d="M20 40 Q30 20 40 40 Q50 60 60 40 M60 40 Q50 20 40 40 Q30 60 20 40"
+                        fill="none"
+                        stroke={COLORS.darkGreen}
+                        strokeWidth="2"
+                    />
+                </motion.svg>
+                
+                <div 
+                    className="py-6 px-2 flex items-center justify-center z-10"
+                    style={{ 
+                        color: COLORS.darkGreen,
+                        writingMode: "vertical-rl", 
+                        textOrientation: "mixed"
+                    }}
+                >
+                    <span className="font-bold tracking-widest text-xs whitespace-nowrap transform rotate-180">
+                        ENQUIRY FORM
+                    </span>
+                </div>
+            </motion.div>
+
+            {/* Main Stack Toggle Button (MOVED DOWN) */}
+            <motion.button 
+                onClick={() => setIsStackOpen(!isStackOpen)}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                animate={{ 
+                    rotate: isStackOpen ? 180 : 0,
                 }}
                 transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeOut"
+                    rotate: { type: "spring", stiffness: 200, damping: 15 }
                 }}
-            />
-            <motion.div 
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: COLORS.gold }}
-                animate={{
-                    scale: [1, 1.8, 2.2],
-                    opacity: [0.5, 0.2, 0],
-                }}
-                transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeOut",
-                    delay: 0.5
-                }}
-            />
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-        </motion.button>
+                className="mr-2 p-4 rounded-full shadow-2xl border-2 border-transparent relative z-50 overflow-hidden"
+                style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
+            >
+                {/* Magnetic Field Rings */}
+                <motion.div 
+                    className="absolute inset-0 rounded-full border-2"
+                    style={{ borderColor: COLORS.gold }}
+                    animate={{
+                        scale: [1, 1.5, 2],
+                        opacity: [0.7, 0.4, 0],
+                    }}
+                    transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                    }}
+                />
+                <motion.div 
+                    className="absolute inset-0 rounded-full border-2"
+                    style={{ borderColor: COLORS.gold }}
+                    animate={{
+                        scale: [1, 1.8, 2.2],
+                        opacity: [0.5, 0.2, 0],
+                    }}
+                    transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeOut",
+                        delay: 0.5
+                    }}
+                />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+            </motion.button>
+            
+        </div>
       </div>
 
-      {/* 2. CHAT INTERFACE */}
-      <ChatInterface 
-        isOpen={activeChat} 
-        onClose={toggleChat} 
-        colors={COLORS}
-        message={chatMessage}
-        setMessage={setChatMessage}
-        sendMessage={sendMessage}
-      />
-
-      {/* 3. ENROLLMENT MODAL */}
+      {/* --- MODALS --- */}
+      
+      {/* ENROLLMENT MODAL */}
       <EnrollmentModal isOpen={isModalOpen} onClose={toggleModal} colors={COLORS} />
+
+      {/* CHATBOT MODAL */}
+      <FaqChatbotModal
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        colors={COLORS}
+      />
 
       <Footer />
     </>
   );
 };
 
-
-// --- SUB COMPONENTS (Moved from Hero) ---
+// --- SUB COMPONENTS ---
 
 // Floating Button
 interface FloatingBtnProps {
@@ -407,92 +407,6 @@ const FloatingButton = ({ children, label, color, textColor, pulse = false, vari
         </motion.div>
     )
 }
-
-// Chat Interface
-interface ChatProps {
-    isOpen: boolean;
-    onClose: () => void;
-    colors: typeof COLORS;
-    message: string;
-    setMessage: (msg: string) => void;
-    sendMessage: () => void;
-}
-
-const chatVariants: Variants = {
-    hidden: { x: "100%", opacity: 0 },
-    visible: { 
-        x: 0, 
-        opacity: 1,
-        transition: { 
-            type: "spring", 
-            stiffness: 300, 
-            damping: 25 
-        }
-    },
-    exit: { 
-        x: "100%", 
-        opacity: 0,
-        transition: { duration: 0.3 }
-    }
-};
-
-const ChatInterface: React.FC<ChatProps> = ({ isOpen, onClose, colors, message, setMessage, sendMessage }) => {
-    if (!isOpen) return null;
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    className="fixed bottom-28 right-6 w-80 md:w-96 z-[100] font-sans"
-                    variants={chatVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                >
-                    <div 
-                        className="rounded-2xl shadow-2xl overflow-hidden border-2"
-                        style={{ borderColor: colors.gold, backgroundColor: colors.white }}
-                    >
-                        <div className="p-4 flex items-center justify-between" style={{ backgroundColor: colors.gold }}>
-                            <div className="flex items-center gap-3">
-                                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: colors.white, color: colors.darkGreen }}>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2c-5.5 0-10 3.6-10 8 0 4.4 4.5 8 10 8a13 13 0 0 0 1.9-.1l4.8 2.8c.4.2 1-.1.9-.6l-.7-3.2c2-1.6 3.1-3.8 3.1-6.1 0-4.4-4.5-8-10-8Z"/></svg>
-                                    </div>
-                                </motion.div>
-                                <div>
-                                    <h3 className="font-bold" style={{ color: colors.darkGreen }}>AI Assistant</h3>
-                                    <div className="flex items-center gap-1">
-                                        <motion.div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.darkGreen }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }} />
-                                        <span className="text-xs" style={{ color: colors.darkGreen }}>Online</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/20 transition-colors">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                            </button>
-                        </div>
-                        <div className="p-4 h-64 overflow-y-auto">
-                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
-                                <div className="inline-block px-4 py-2 rounded-2xl rounded-bl-none max-w-xs" style={{ backgroundColor: colors.cream }}>
-                                    <p className="text-sm" style={{ color: colors.darkGreen }}>Hello! I'm Greens Tech AI assistant. How can I help you today?</p>
-                                </div>
-                                <span className="block text-xs mt-1 opacity-60" style={{ color: colors.darkGreen }}>Just now</span>
-                            </motion.div>
-                        </div>
-                        <div className="p-4 border-t" style={{ borderColor: colors.gray }}>
-                            <div className="flex gap-2">
-                                <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendMessage()} placeholder="Type your message..." className="flex-1 p-3 rounded-full border text-sm" style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }} />
-                                <motion.button onClick={sendMessage} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-3 rounded-full" style={{ backgroundColor: colors.gold, color: colors.darkGreen }}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-                                </motion.button>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
-};
 
 // Enrollment Modal
 interface ModalProps {
