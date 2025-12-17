@@ -15,7 +15,7 @@ const CARDS = [
   {
     id: 0,
     title: "Global Certification",
-    imgUrl: "https://images.unsplash.com/photo-1589330694653-4d5c953385d5?q=80&w=2669&auto=format&fit=crop",
+    imgUrl: "https://cdn.vectorstock.com/i/1000v/33/49/global-certificate-vector-11613349.jpg",
     bgColor: COLORS.gold,
   },
   {
@@ -150,6 +150,19 @@ const EnrollSection: React.FC = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="john@example.com"
+                  className="w-full px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B99A49] transition-all font-medium text-lg"
+                  style={{ backgroundColor: COLORS.cream, color: COLORS.darkGreen }}
+                  required
+                />
+              </div>
+<div className="flex flex-col gap-2">
+                <label className="text-sm font-bold ml-1 uppercase tracking-wider" style={{ color: COLORS.gold }}>Mobile Phone</label>
+                <input
+                  type="number"
+                  name="Mobile Number"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="xxxxxxxxxx"
                   className="w-full px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B99A49] transition-all font-medium text-lg"
                   style={{ backgroundColor: COLORS.cream, color: COLORS.darkGreen }}
                   required

@@ -33,7 +33,7 @@ const steps = [
 
 // FIXED: Using a generated placeholder with your brand colors to ensure it loads.
 // When you have your real certificate image file, import it: import certImg from './cert.png'
-const certificateImage = "https://placehold.co/800x600/F0ECE3/01311F?text=Certificate+Preview";
+const certificateImage = "https://graphicsfamily.com/wp-content/uploads/edd/2022/01/Modern-Award-Certificate-Template.jpg";
 
 const CertificateSection: React.FC = () => {
   return (
