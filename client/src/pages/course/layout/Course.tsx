@@ -3,7 +3,6 @@ import HeroSection from '../section/HeroSection';
 import EnrollSection from '../section/EnrollSection';
 import SuccessStoriesSection from '../section/SuccessStoriesSection';
 import CareerImpactSection from '../section/CareerImpactSection';
-import ModulesSection from '../section/ModulesSection';
 import TrainerSection from '../section/TrainerSection';
 import TechStackSection from '../section/TechStackSection';
 import ProjectsSection from '../section/ProjectsSection';
@@ -22,7 +21,6 @@ const course: React.FC = () => {
         <EnrollSection/>
         <SuccessStoriesSection/>
         <CareerImpactSection/>
-        <ModulesSection/>
         <TrainerSection/>
         <TechStackSection/>
         <ProjectsSection/>

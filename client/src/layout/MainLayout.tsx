@@ -141,7 +141,7 @@ export const MainLayout = () => {
 
   const handleWhatsApp = (): void => {
     // Replace with your actual WhatsApp link
-    window.open("https://wa.me/1234567890", "_blank");
+    window.open("https://wa.me/8870295336", "_blank");
   };
 
   // Listen for "Enrol Now" clicks from other components
