@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 @keyframes marquee {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
 }
 
 .animate-marquee {
   display: inline-block;
-  min-width: 100%;
-  animation: marquee 60s linear infinite;
+  padding-left: 20px;
+  /* Adjust speed based on content length if needed */
+  animation: marquee 25s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }

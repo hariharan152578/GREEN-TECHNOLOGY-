@@ -1,0 +1,132 @@
+import React from "react";
+import { motion } from "framer-motion";
+
+// --- Configuration ---
+const COLORS = {
+  darkGreen: "#01311F",
+  gold: "#B99A49",
+  cream: "#F0ECE3",
+  white: "#FFFFFF",
+};
+
+// --- Steps Data ---
+const steps = [
+  {
+    id: 1,
+    title: "Complete All Modules",
+    description: "Watch all video lessons and complete the quizzes for each section to unlock the final assessment.",
+    icon: "📚",
+  },
+  {
+    id: 2,
+    title: "Submit Capstone Project",
+    description: "Apply your skills in a real-world scenario. Submit your project for review by our expert mentors.",
+    icon: "💻",
+  },
+  {
+    id: 3,
+    title: "Get Certified",
+    description: "Once approved, receive your industry-recognized AWS Solution Architect certificate instantly.",
+    icon: "🎓",
+  },
+];
+
+// FIXED: Using a generated placeholder with your brand colors to ensure it loads.
+// When you have your real certificate image file, import it: import certImg from './cert.png'
+const certificateImage = "https://graphicsfamily.com/wp-content/uploads/edd/2022/01/Modern-Award-Certificate-Template.jpg";
+
+const CertificateSection: React.FC = () => {
+  return (
+    <section 
+      className="relative w-full py-20 px-6 md:px-20 overflow-hidden" 
+      style={{ backgroundColor: COLORS.white }}
+    >
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: COLORS.darkGreen }}>
+            Earn Your Recognition
+          </h2>
+          <div className="w-24 h-1.5 mx-auto rounded-full" style={{ backgroundColor: COLORS.gold }}></div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+          
+          {/* === LEFT SIDE: INFO STEPS === */}
+          <div className="w-full lg:w-1/2 flex flex-col gap-6">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2, duration: 0.5 }}
+                className="p-6 rounded-2xl shadow-md flex items-start gap-5 transition-transform hover:-translate-y-1"
+                style={{ backgroundColor: COLORS.cream }}
+              >
+                {/* Step Number/Icon */}
+                <div 
+                  className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-2xl shadow-sm"
+                  style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
+                >
+                  {step.icon}
+                </div>
+
+                {/* Text Content */}
+                <div>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: COLORS.darkGreen }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm md:text-base leading-relaxed opacity-80" style={{ color: COLORS.darkGreen }}>
+                    {step.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+
+          {/* === RIGHT SIDE: SAMPLE CERTIFICATE === */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
+            whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="w-full lg:w-1/2 relative"
+          >
+            {/* Background Decor Blob */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] rounded-full blur-3xl opacity-20" style={{ backgroundColor: COLORS.gold }}></div>
+
+            {/* Certificate Container */}
+            <div 
+                className="relative z-10 p-2 rounded-xl border-4 shadow-2xl bg-white overflow-hidden" 
+                style={{ borderColor: COLORS.gold }}
+            >
+              
+              {/* Actual Image - Added min-h to prevent collapsing if image fails */}
+              <img 
+                src={certificateImage} 
+                alt="Sample Course Certificate" 
+                className="w-full h-auto min-h-[300px] rounded-lg object-cover bg-gray-100" 
+              />
+
+              {/* Verified Badge Overlay */}
+              <div 
+                className="absolute bottom-6 right-6 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 font-bold text-sm"
+                style={{ backgroundColor: COLORS.darkGreen, color: COLORS.gold }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Verified
+              </div>
+
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default CertificateSection;

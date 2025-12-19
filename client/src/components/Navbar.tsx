@@ -1,13 +1,49 @@
-import "../index.css"
-import logo from "../assets/logo.png"
+import { useState, useEffect } from "react";
+import logo from "../assets/logo.png";
 
 const Navbar = () => {
+  const [notices, setNotices] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Define your backend base URL
+  // In production, this would be your domain like https://api.yourwebsite.com
+  const BACKEND_URL = "http://localhost:5000"; 
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        // Updated to use the absolute URL to avoid CORS/Proxy issues
+        const response = await fetch(`${BACKEND_URL}/api/notices`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }); 
+
+        if (!response.ok) throw new Error("Network response was not ok");
+        
+        const data = await response.json();
+        setNotices(data); 
+      } catch (error) {
+        console.error("Error fetching notices:", error);
+        setNotices(["Welcome to Greens Technology | Training & Placement"]); 
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotices();
+  }, []);
+
+  const marqueeText = loading 
+    ? "Loading updates..." 
+    : notices.length > 0 
+      ? notices.join(" | ") 
+      : "Welcome to Greens Technology";
+
   return (
     <>
-      {/* Top Navbar */}
-      <div className="w-full bg-[#01311F] text-[#F0ECE3] h-16 flex items-center px-4 md:px-6 justify-between">
-        
-        {/* Left - Logo */}
+      <nav className="w-full bg-[#01311F] text-[#F0ECE3] h-16 flex items-center px-4 md:px-6 justify-between">
         <div className="shrink-0">
           <img
             src={logo}
@@ -16,29 +52,35 @@ const Navbar = () => {
           />
         </div>
 
-        {/* Center - Running Text (DESKTOP ONLY) */}
-        <div className="hidden md:flex flex-1 mx-6 overflow-hidden whitespace-nowrap">
-          <p className="animate-marquee text-sm md:text-base">
-            Welcome to our official website | International Conference 2025 | Register Now 🚀
-          </p>
+        {/* Desktop Marquee */}
+        <div className="hidden md:flex flex-1 mx-10 overflow-hidden whitespace-nowrap relative">
+          {!loading && (
+            <p className="animate-marquee inline-block text-sm md:text-base font-light tracking-wide">
+              {marqueeText}
+            </p>
+          )}
         </div>
 
-        {/* Right - Contact */}
         <div className="shrink-0">
-          <span className="text-xs md:text-base font-semibold">
-            📞 +91 98765 43210
-          </span>
+          <a 
+            href="tel:+919876543210" 
+            className="text-xs md:text-base font-semibold hover:text-[#B99A49] transition-colors flex items-center gap-2"
+          >
+            <span className="hidden sm:inline">📞</span> +91 98765 43210
+          </a>
         </div>
-      </div>
+      </nav>
 
-      {/* Running Text BELOW Navbar (MOBILE ONLY) */}
-      <div className="md:hidden w-full bg-[#01311F] text-[#F0ECE3] overflow-hidden whitespace-nowrap px-4 py-2">
-        <p className="animate-marquee text-sm">
-          Welcome to our official website | International Conference 2025 | Register Now 🚀
-        </p>
+      {/* Mobile Marquee */}
+      <div className="md:hidden w-full bg-[#01311F] border-t border-white/10 text-[#F0ECE3] overflow-hidden whitespace-nowrap py-2">
+        {!loading && (
+          <p className="animate-marquee inline-block text-sm">
+            {marqueeText}
+          </p>
+        )}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
