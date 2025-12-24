@@ -1,444 +1,97 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { usePageContext } from "../../context/usePageContext";
+import {
+  FiDownload,
+  FiChevronLeft,
+  FiChevronRight,
+  FiFileText,
+  FiBookOpen,
+  FiFilm,
+  FiFolder,
+} from "react-icons/fi";
 
+const API_BASE_URL = "http://localhost:5000";
 
-/* eslint-disable no-irregular-whitespace */
-import React, { useState, useEffect } from 'react';
-import { motion, type Variants, AnimatePresence } from 'framer-motion';
-import { FiDownload, FiEye, FiFileText, FiBookOpen, FiFilm, FiFolder, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-
-// --- Color Palette Definitions ---
-// Dark Green: #01311F (Background)
-// Gold/Mustard: #B99A49 (Primary Accent)
-// Cream/Off-White: #F0ECE3 (Text/Card Background)
-const darkGreen = '#01311F';
-const gold = '#B99A49';
-const cream = '#F0ECE3';
-
-// --- NEW SWIPE CONSTANTS AND HELPER ---
-const swipeConfidenceThreshold = 10000; // Increased confidence for card carousel
-const swipePower = (offset: number, velocity: number) => {
-    return Math.abs(offset) * velocity;
-};
-
-// --- 1. TypeScript Interface ---
+/* ---------- TYPES ---------- */
 interface Material {
-  id: number;
-  fileName: string;
-  description: string;
-  fileType: 'PDF' | 'DOCX' | 'VIDEO' | 'PRESENTATION' | 'EBOOK';
-  size: string;
-  highlight: string; // New field for simple highlight tag
+  id: number;
+  fileName: string;
+  description: string;
+  fileType: string;
+  size: string;
+  highlight: string;
+  filePath: string;
 }
 
-// --- 2. Sample Data (Increased data count to demonstrate looping) ---
-const dummyMaterials: Material[] = [
-  {
-    id: 1,
-    fileName: 'Advanced Melack Theory.pdf',
-    description: 'Detailed lecture notes covering theoretical concepts and practical case studies for advanced learners.',
-    fileType: 'PDF',
-    size: '12.5 MB',
-    highlight: 'Quick Start',
-  },
-  {
-    id: 2,
-    fileName: 'Deeechool Workbook.docx',
-    description: 'Interactive exercise sheets and quizzes to reinforce understanding of the Deeechool Trickuls module.',
-    fileType: 'DOCX',
-    size: '500 KB',
-    highlight: 'Module 2',
-  },
-  {
-    id: 3,
-    fileName: 'Key Boolgany Project.pptx',
-    description: 'Template and guidelines for the final design project, including presentation structure.',
-    fileType: 'PRESENTATION',
-    size: '8.1 MB',
-    highlight: 'Template',
-  },
-  {
-    id: 4,
-    fileName: 'Tlrnmart Video Lecture.mp4',
-    description: 'High-definition recording of the core Tlrnmart principles, explained by the course instructor.',
-    fileType: 'VIDEO',
-    size: '350 MB',
-    highlight: 'Lecture',
-  },
-  {
-    id: 5,
-    fileName: 'Bonus Cheat Sheet.pdf',
-    description: 'A quick reference guide compiling all key formulas and definitions in one printable document.',
-    fileType: 'PDF',
-    size: '2 MB',
-    highlight: 'New',
-  },
-  {
-    id: 6,
-    fileName: 'Capstone Report Guide.docx',
-    description: 'Essential formatting and content guidelines for the final capstone submission.',
-    fileType: 'DOCX',
-    size: '1.1 MB',
-    highlight: 'Final',
-  },
-];
-
-const CARD_COUNT = dummyMaterials.length;
-
-// --- Helper function to get an icon based on file type ---
-const getFileIcon = (fileType: Material['fileType']) => {
-  switch (fileType) {
-    case 'PDF':
-      return <FiFileText className="w-7 h-7" />;
-    case 'DOCX':
-      return <FiBookOpen className="w-7 h-7" />;
-    case 'VIDEO':
-      return <FiFilm className="w-7 h-7" />;
-    case 'PRESENTATION':
-      return <FiFolder className="w-7 h-7" />;
-    case 'EBOOK':
-      return <FiBookOpen className="w-7 h-7" />;
-    default:
-      return <FiFileText className="w-7 h-7" />;
-  }
+/* ---------- ICON ---------- */
+const getIcon = (type: string) => {
+  switch (type) {
+    case "PDF": return <FiFileText />;
+    case "DOCX": return <FiBookOpen />;
+    case "VIDEO": return <FiFilm />;
+    case "PRESENTATION": return <FiFolder />;
+    default: return <FiFileText />;
+  }
 };
 
-// --- 3. Framer Motion Variants (FIXED GLITCH LOGIC) ---
-const carouselVariants = (direction: number): Variants => ({
-  enter: {
-    x: direction > 0 ? '100%' : '-100%',
-    opacity: 0,
-    // Crucial for the fix: Start outside and keep absolute for the transition
-    position: 'absolute', 
-    width: '100%',
-  },
-  center: {
-    zIndex: 1,
-    x: 0,
-    opacity: 1,
-    // Crucial for the fix: Use relative position when centered, so it takes up space
-    position: 'relative', 
-    width: '100%',
-  },
-  exit: {
-    zIndex: 0,
-    x: direction < 0 ? '100%' : '-100%',
-    opacity: 0,
-    // Crucial for the fix: Exit as absolute so it doesn't affect flow
-    position: 'absolute',
-    width: '100%',
-  },
-});
-
-
-// --- 4. Material Card Component (REUSED) ---
-interface MaterialCardProps {
-  material: Material;
-}
-
-const MaterialCard: React.FC<MaterialCardProps> = ({ material }) => {
-
-  const handlePreview = () => {
-    alert(`Previewing: ${material.fileName}`);
-  };
-
-  const handleDownload = () => {
-    alert(`Downloading: ${material.fileName}`);
-  };
-
-  return (
-    <motion.div
-      className="relative rounded-3xl shadow-xl overflow-hidden cursor-pointer flex flex-col h-full"
-      style={{ backgroundColor: cream, borderTop: `6px solid ${gold}` }} // Top accent border
-      whileHover={{ 
-        y: -8, 
-        boxShadow: `0 25px 50px rgba(0, 0, 0, 0.3)`,
-      }}
-      transition={{ type: 'spring', stiffness: 250, damping: 20 }}
-    >
-      
-      {/* Content and Header */}
-      <div className="p-6 flex-grow">
-        
-        {/* File Icon and Highlight Tag */}
-        <div className="flex justify-between items-start mb-4">
-          {/* Icon Badge with Gradient */}
-          <div 
-            className="p-3 rounded-xl shadow-md"
-            style={{ background: `linear-gradient(45deg, ${gold}, ${darkGreen})`, color: cream }}
-          >
-            {getFileIcon(material.fileType)}
-          </div>
-
-          {/* Highlight Tag */}
-          <span 
-            className="text-xs font-bold px-3 py-1 rounded-full uppercase"
-            style={{ backgroundColor: darkGreen, color: gold }}
-          >
-            {material.highlight}
-          </span>
-        </div>
-
-        {/* File Name */}
-        <h3 
-          className="text-xl sm:text-2xl font-extrabold mb-2 leading-snug"
-          style={{ color: darkGreen }}
-        >
-          {material.fileName}
-        </h3>
-        
-        {/* Description */}
-        <p className="text-sm sm:text-base mb-4 leading-relaxed h-16 overflow-hidden" style={{ color: darkGreen, opacity: 0.7 }}>
-          {material.description}
-        </p>
-
-        {/* Metadata Block */}
-        <div className="flex space-x-4 pt-3 border-t border-gray-300">
-          <div className="text-sm font-semibold" style={{ color: gold }}>{material.fileType}</div>
-          <div className="text-sm font-semibold" style={{ color: darkGreen, opacity: 0.8 }}>{material.size}</div>
-        </div>
-      </div>
-
-      {/* Action Buttons Footer (Full-width Download) */}
-      <div className="p-6 pt-0">
-        
-        <motion.button
-          onClick={handleDownload}
-          className="w-full flex items-center justify-center space-x-3 px-6 py-3 text-base sm:text-lg font-bold rounded-xl shadow-lg transition-colors"
-          style={{ backgroundColor: gold, color: darkGreen }}
-          whileHover={{ scale: 1.02, backgroundColor: darkGreen, color: cream }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ duration: 0.2 }}
-        >
-          <FiDownload className="w-5 h-5" />
-          <span>Download File</span>
-        </motion.button>
-        
-        {/* Secondary Preview Link/Button */}
-        <motion.button
-          onClick={handlePreview}
-          className="w-full mt-3 text-sm font-semibold"
-          style={{ color: darkGreen, opacity: 0.8 }}
-          whileHover={{ color: gold, opacity: 1 }}
-        >
-          <FiEye className="inline mr-1" /> Quick Preview
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-};
-
-
-// --- 5. Main Material Download Section Component (LOOPING CAROUSEL) ---
 const MaterialDownloadSection: React.FC = () => {
-  // State to manage the starting index of the visible materials (0-indexed)
-  const [currentIndex, setCurrentIndex] = useState(0);
-  // State to manage the direction of the animation for smooth transitions
-  const [direction, setDirection] = useState(0);
-  // State to track visible cards based on screen size
-  const [visibleCards, setVisibleCards] = useState(3);
+  const { domainId, courseId } = usePageContext();
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [index, setIndex] = useState(0);
 
-  // Effect to update visible cards based on window width
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setVisibleCards(1); // Mobile: 1 card
-      } else if (window.innerWidth < 1024) {
-        setVisibleCards(2); // Tablet: 2 cards
-      } else {
-        setVisibleCards(3); // Desktop: 3 cards
-      }
-    };
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/api/materials`, {
+        params: { domainId: domainId ?? 0, courseId: courseId ?? 0 },
+      })
+      .then(res => setMaterials(res.data))
+      .catch(console.error);
+  }, [domainId, courseId]);
 
-    // Initial check
-    handleResize();
+  if (!materials.length) return null;
 
-    // Add event listener
-    window.addEventListener('resize', handleResize);
+  const visible = materials.slice(index, index + 3);
 
-    // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  return (
+    <section className="p-10 bg-[#01311F]">
+      <h2 className="text-4xl text-center text-[#F0ECE3] mb-10">
+        Resource<span className="text-[#B99A49]">.</span>Library
+      </h2>
 
-  // --- Looping Logic ---
-  const paginate = (newDirection: number) => {
-    setDirection(newDirection);
-    setCurrentIndex(prevIndex => {
-      const newIndex = prevIndex + newDirection;
-      
-      // Loop back from the end to the start
-      if (newIndex < 0) {
-        return CARD_COUNT - 1; 
-      }
-      // Loop back from the start to the end
-      if (newIndex >= CARD_COUNT) {
-        return 0;
-      }
-      return newIndex;
-    });
-  };
-    
-  // --- Drag/Swipe Logic (New) ---
-  const handleDragEnd = (
-    event: MouseEvent | TouchEvent | PointerEvent,
-    info: { offset: { x: number; y: number; }; velocity: { x: number; y: number; }; }
-  ) => {
-    // Calculate swipe power based on distance and velocity
-    const swipe = swipePower(info.offset.x, info.velocity.x);
+      <div className="relative flex items-center max-w-7xl mx-auto">
+        <button onClick={() => setIndex(i => Math.max(i - 1, 0))}>
+          <FiChevronLeft />
+        </button>
 
-    if (swipe < -swipeConfidenceThreshold) {
-      // Swipe Left (Next)
-      paginate(1);
-    } else if (swipe > swipeConfidenceThreshold) {
-      // Swipe Right (Previous)
-      paginate(-1);
-    }
-    // If swipe is not strong enough, Framer Motion will snap back automatically.
-  };
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 flex-1">
+          {visible.map(m => (
+            <div key={m.id} className="bg-[#F0ECE3] rounded-xl p-6">
+              <div className="flex justify-between mb-4">
+                {getIcon(m.fileType)}
+                <span className="text-xs font-bold">{m.highlight}</span>
+              </div>
 
+              <h3 className="font-bold mb-2">{m.fileName}</h3>
+              <p className="text-sm mb-4">{m.description}</p>
 
-  // Get the cards currently visible based on visibleCards state
-  const getVisibleMaterials = () => {
-    // Generate indices: [currentIndex, currentIndex + 1, ...] based on visibleCards
-    const indices = Array.from({ length: visibleCards }, (_, i) => 
-        (currentIndex + i) % CARD_COUNT
-    );
+              <a
+                href={`${API_BASE_URL}${m.filePath}`}
+                download
+                className="flex items-center justify-center bg-[#B99A49] text-[#01311F] font-bold py-2 rounded"
+              >
+                <FiDownload className="mr-2" /> Download
+              </a>
+            </div>
+          ))}
+        </div>
 
-    // Map indices to the actual material objects
-    return indices.map(index => dummyMaterials[index]);
-  };
-  
-  const visibleMaterials = getVisibleMaterials();
-
-  // Calculate total pages for the pagination dots
-  const totalDots = CARD_COUNT;
-
-
-  return (
-    // FIX: Removed min-h-screen and adjusted padding
-    <div className="p-4 sm:p-10 font-sans pb-20" style={{ backgroundColor: darkGreen }}>
-      
-      {/* Header */}
-      <motion.div
-        className="max-w-7xl mx-auto"
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 
-          className="text-4xl sm:text-5xl font-light mb-8 sm:mb-12 text-center"
-          style={{ color: cream }}
-        >
-          Resource<span style={{ color: gold }}>.</span>Library <span className="font-bold" style={{ color: gold }}>+</span> Trending
-        </h2>
-      </motion.div>
-
-      {/* Carousel Container (Outer wrapper for position relative and centering) */}
-      {/* The main container now only shows desktop navigation buttons, which are hidden on mobile (lg:block) */}
-      <div className="max-w-7xl mx-auto relative flex items-center justify-center px-4 sm:px-0">
-        
-        {/* --- Desktop Navigation: Previous Button (Hidden below lg breakpoint) --- */}
-        <motion.button
-          onClick={() => paginate(-1)}
-          // Only visible on large screens (desktop)
-          className="absolute left-[-60px] top-1/2 transform -translate-y-1/2 z-20 p-3 rounded-full shadow-lg hidden lg:block"
-          style={{ backgroundColor: gold, color: darkGreen }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <FiChevronLeft className="w-6 h-6" />
-        </motion.button>
-        
-        {/* Material Cards Container (Inner wrapper to handle overflow and fixed height) */}
-        <div className="relative overflow-hidden w-full min-h-[500px]"> 
-            
-            {/* --- REMOVED MOBILE NAVIGATION BUTTONS --- */}
-            
-          <AnimatePresence initial={false} custom={direction} mode='popLayout'>
-              {/* The actual sliding grid element */}
-              <motion.div
-                  key={currentIndex} // Key change: forces re-render and exit/enter animation
-                  // ENABLE SWIPE/DRAG LOGIC
-                  drag="x"
-                  dragConstraints={{ left: -100, right: 100 }} // Allow a small drag distance
-                  dragElastic={0.2}
-                  onDragEnd={handleDragEnd}
-                  // Dynamic grid columns based on visibleCards state
-                  className={`grid gap-10 w-full cursor-grab active:cursor-grabbing ${ // Added cursor classes for desktop cue
-                      visibleCards === 1 ? 'grid-cols-1' : 
-                      visibleCards === 2 ? 'grid-cols-2' : 
-                      'grid-cols-3'
-                  }`}
-                  custom={direction}
-                  variants={carouselVariants(direction)}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                      x: { type: "spring", stiffness: 300, damping: 30 },
-                      opacity: { duration: 0.2 }
-                  }}
-              >
-                  {visibleMaterials.map((material) => (
-                      <MaterialCard key={material.id} material={material} />
-                  ))}
-              </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* --- Desktop Navigation: Next Button (Hidden below lg breakpoint) --- */}
-        <motion.button
-          onClick={() => paginate(1)}
-          // Only visible on large screens (desktop)
-          className="absolute right-[-60px] top-1/2 transform -translate-y-1/2 z-20 p-3 rounded-full shadow-lg hidden lg:block"
-          style={{ backgroundColor: gold, color: darkGreen }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <FiChevronRight className="w-6 h-6" />
-        </motion.button>
-
-      </div>
-      
-      {/* Pagination Dots (Remains visible for all screen sizes) */}
-      <div className="flex justify-center mt-6 space-x-2">
-        {Array.from({ length: totalDots }, (_, index) => (
-          <motion.div
-            key={index}
-            className="w-3 h-3 rounded-full cursor-pointer"
-            onClick={() => { 
-                // Calculate direction to ensure correct animation
-                const diff = index - currentIndex;
-                const direction = diff > 0 ? 1 : diff < 0 ? -1 : 0;
-                if (direction !== 0) {
-                    setDirection(direction);
-                    setCurrentIndex(index);
-                }
-            }}
-            style={{ 
-              backgroundColor: index === currentIndex ? gold : cream,
-              opacity: index === currentIndex ? 1 : 0.5,
-            }}
-            whileHover={{ scale: 1.4, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 400 }}
-          />
-        ))}
-      </div>
-      
-      {/* Call to Action Button */}
-      {/* Adjusted spacing: Reduced margin-top for mobile */}
-      <div className="flex justify-center mt-8 sm:mt-12">
-        <motion.button
-          className="px-10 py-4 text-lg sm:text-xl font-bold rounded-full shadow-2xl"
-          style={{ backgroundColor: gold, color: darkGreen }}
-          whileHover={{ scale: 1.05, boxShadow: `0 15px 30px -5px ${gold}80` }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 300 }}
-        >
-          Explore Full Resource Library (100+ Files)
-        </motion.button>
-      </div>
-
-    </div>
-  );
+        <button onClick={() => setIndex(i => Math.min(i + 1, materials.length - 3))}>
+          <FiChevronRight />
+        </button>
+      </div>
+    </section>
+  );
 };
 
 export default MaterialDownloadSection;

@@ -1,8 +1,8 @@
 /* eslint-disable no-irregular-whitespace */
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { usePageContext } from "../../context/usePageContext";
+import { useParams } from "react-router-dom";
 
 /* ---------------- COLORS ---------------- */
 const COLORS = {
@@ -31,10 +31,15 @@ interface EnrollSectionData {
 
 /* ---------------- COMPONENT ---------------- */
 const EnrollSection: React.FC = () => {
-  const { domainId, courseId } = usePageContext();
+  /** 🔥 URL IS SOURCE OF TRUTH (LIKE HERO) */
+  const { domainId, courseId } = useParams();
+
+  const parsedDomainId = Number(domainId) || 0;
+  const parsedCourseId = Number(courseId) || 0;
 
   const [section, setSection] = useState<EnrollSectionData | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -47,39 +52,54 @@ const EnrollSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  /* ---------------- FETCH ENROLL SECTION (CMS) ---------------- */
+  /* ---------------- FETCH ENROLL SECTION ---------------- */
   useEffect(() => {
+    let mounted = true;
+
     const fetchSection = async () => {
       try {
         const res = await axios.get(
           "http://localhost:5000/api/enrollments",
           {
             params: {
-              domainId: domainId ?? 0,
-              courseId: courseId ?? 0,
+              domainId: parsedDomainId,
+              courseId: parsedCourseId,
             },
           }
         );
 
-        setSection(res.data);
+        if (mounted) {
+          setSection(res.data);
+          setActiveIndex(0);
+        }
       } catch (error) {
         console.error("Failed to load enroll section", error);
       }
     };
 
     fetchSection();
-  }, [domainId, courseId]);
 
-  /* ---------------- AUTO CARD SLIDE ---------------- */
+    return () => {
+      mounted = false;
+    };
+  }, [parsedDomainId, parsedCourseId]);
+
+  /* ---------------- SORT CARDS ---------------- */
+  const cards = useMemo(() => {
+    if (!section?.cards) return [];
+    return [...section.cards].sort((a, b) => a.order - b.order);
+  }, [section]);
+
+  /* ---------------- AUTO SLIDER ---------------- */
   useEffect(() => {
-    if (!section?.cards?.length) return;
+    if (!cards.length || paused) return;
 
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % section.cards.length);
-    }, 5000);
+      setActiveIndex((prev) => (prev + 1) % cards.length);
+    }, 4500);
 
     return () => clearInterval(interval);
-  }, [section]);
+  }, [cards, paused]);
 
   /* ---------------- FORM HANDLERS ---------------- */
   const handleChange = (
@@ -88,13 +108,6 @@ const EnrollSection: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      setProofImage(e.target.files[0]);
-    }
-  };
-
-  /* ---------------- SUBMIT ENQUIRY ---------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -108,16 +121,15 @@ const EnrollSection: React.FC = () => {
     payload.append("email", formData.email);
     payload.append("phone", formData.phone);
     payload.append("course", formData.course);
-    payload.append("domainId", String(domainId ?? 0));
-    payload.append("courseId", String(courseId ?? 0));
+    payload.append("domainId", String(parsedDomainId));
+    payload.append("courseId", String(parsedCourseId));
     payload.append("proofImage", proofImage);
 
     try {
       setLoading(true);
       await axios.post(
         "http://localhost:5000/api/enrollments/request",
-        payload,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        payload
       );
 
       setSuccess(true);
@@ -137,35 +149,42 @@ const EnrollSection: React.FC = () => {
     <section className="relative w-full py-24 px-6 md:px-20 overflow-hidden">
       <div className="max-w-[1800px] mx-auto flex flex-col lg:flex-row gap-24">
 
-        {/* ===== LEFT: IMAGE STACK (CMS) ===== */}
-        <div className="relative w-full lg:w-1/2 min-h-[700px]">
-          {section.cards.map((card, index) => {
-            const position =
-              (index - activeIndex + section.cards.length) %
-              section.cards.length;
+        {/* ===== LEFT: IMAGE STACK ===== */}
+        <div
+          className="relative w-full lg:w-1/2 min-h-[700px]"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          <AnimatePresence>
+            {cards.map((card, index) => {
+              const position =
+                (index - activeIndex + cards.length) % cards.length;
 
-            return (
-              <StackCard
-                key={card.id}
-                title={card.title}
-                imageUrl={`http://localhost:5000${card.imageUrl}`}
-                position={position}
-              />
-            );
-          })}
+              return (
+                <StackCard
+                  key={card.id}
+                  card={card}
+                  position={position}
+                />
+              );
+            })}
+          </AnimatePresence>
         </div>
 
-        {/* ===== RIGHT: ENROLL FORM ===== */}
+        {/* ===== RIGHT: FORM ===== */}
         <div className="w-full lg:w-1/2">
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
+            initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
             className="p-10 rounded-[2.5rem] shadow-2xl"
             style={{ backgroundColor: `${COLORS.darkGreen}F2` }}
           >
-            <h2 className="text-4xl font-bold mb-4 text-center" style={{ color: COLORS.gold }}>
+            <h2
+              className="text-4xl font-bold mb-4 text-center"
+              style={{ color: COLORS.gold }}
+            >
               {section.title}
             </h2>
 
@@ -227,17 +246,22 @@ const EnrollSection: React.FC = () => {
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange}
+                onChange={(e) =>
+                  setProofImage(e.target.files?.[0] || null)
+                }
                 className="text-white"
               />
 
               <motion.button
-                whileHover={{ scale: 1.03 }}
+                whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
                 type="submit"
                 disabled={loading}
                 className="w-full py-4 rounded-xl font-bold text-lg"
-                style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
+                style={{
+                  backgroundColor: COLORS.gold,
+                  color: COLORS.darkGreen,
+                }}
               >
                 {loading ? "Submitting..." : section.ctaText}
               </motion.button>
@@ -251,16 +275,16 @@ const EnrollSection: React.FC = () => {
 
 /* ---------------- STACK CARD ---------------- */
 const StackCard: React.FC<{
-  title: string;
-  imageUrl: string;
+  card: EnrollCard;
   position: number;
-}> = ({ title, imageUrl, position }) => {
-  let style = {};
+}> = ({ card, position }) => {
+  const variants = [
+    { x: 0, scale: 1, opacity: 1, zIndex: 3 },
+    { x: 60, scale: 0.92, opacity: 1, zIndex: 2 },
+    { x: 120, scale: 0.85, opacity: 0.7, zIndex: 1 },
+  ];
 
-  if (position === 0) style = { x: 0, scale: 1, opacity: 1 };
-  else if (position === 1) style = { x: 60, scale: 0.92, opacity: 1 };
-  else if (position === 2) style = { x: 120, scale: 0.85, opacity: 0.7 };
-  else style = { opacity: 0 };
+  const style = variants[position] || { opacity: 0 };
 
   return (
     <motion.div
@@ -268,9 +292,15 @@ const StackCard: React.FC<{
       transition={{ duration: 0.8 }}
       className="absolute w-[450px] h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white"
     >
-      <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+      <img
+        src={`http://localhost:5000${card.imageUrl}`}
+        alt={card.title}
+        className="w-full h-full object-cover"
+      />
       <div className="absolute bottom-0 w-full p-6 bg-gradient-to-t from-black/80">
-        <h3 className="text-white text-2xl font-bold">{title}</h3>
+        <h3 className="text-white text-2xl font-bold">
+          {card.title}
+        </h3>
       </div>
     </motion.div>
   );
