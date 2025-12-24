@@ -1,7 +1,19 @@
-import "../index.css"
+import { useState, useEffect } from "react"
 import logo from "../assets/logo.png"
 
 const Navbar = () => {
+  // 1. Define your dynamic content here
+  const [notices] = useState([
+    "Welcome to our official website",
+    "International Conference 2025",
+    "Register Now 🚀",
+    "New Batch starts from Monday",
+    "Limited seats available for DevOps workshop"
+  ]);
+
+  // 2. Join notices with a separator for the marquee effect
+  const marqueeText = notices.join(" | ");
+
   return (
     <>
       {/* Top Navbar */}
@@ -17,24 +29,27 @@ const Navbar = () => {
         </div>
 
         {/* Center - Running Text (DESKTOP ONLY) */}
-        <div className="hidden md:flex flex-1 mx-6 overflow-hidden whitespace-nowrap">
-          <p className="animate-marquee text-sm md:text-base">
-            Welcome to our official website | International Conference 2025 | Register Now 🚀
+        <div className="hidden md:flex flex-1 mx-10 overflow-hidden whitespace-nowrap relative">
+          <p className="animate-marquee inline-block text-sm md:text-base">
+            {marqueeText}
           </p>
         </div>
 
         {/* Right - Contact */}
         <div className="shrink-0">
-          <span className="text-xs md:text-base font-semibold">
+          <a 
+            href="tel:+919876543210" 
+            className="text-xs md:text-base font-semibold hover:text-[#B99A49] transition-colors"
+          >
             📞 +91 98765 43210
-          </span>
+          </a>
         </div>
       </div>
 
       {/* Running Text BELOW Navbar (MOBILE ONLY) */}
-      <div className="md:hidden w-full bg-[#01311F] text-[#F0ECE3] overflow-hidden whitespace-nowrap px-4 py-2">
-        <p className="animate-marquee text-sm">
-          Welcome to our official website | International Conference 2025 | Register Now 🚀
+      <div className="md:hidden w-full bg-[#01311F] border-t border-white/10 text-[#F0ECE3] overflow-hidden whitespace-nowrap py-2">
+        <p className="animate-marquee inline-block text-sm">
+          {marqueeText}
         </p>
       </div>
     </>

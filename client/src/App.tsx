@@ -1,12 +1,7 @@
-import { BrowserRouter } from "react-router-dom"
-import Approutes from "./Routes/Approutes"
+import Approutes from "./Routes/Approutes";
 
-const App = () => {
-  return (
-    <BrowserRouter>
-      <Approutes />
-    </BrowserRouter>
-  )
-}
+const App: React.FC = () => {
+  return <Approutes />;
+};
 
-export default App
+export default App;
