@@ -15,6 +15,7 @@ interface HeroData {
   ctaLink: string;
   images: string[];
 }
+const BACKEND_URL = "http://localhost:5000";
 
 /* ---------------- COLORS ---------------- */
 const COLORS = {
@@ -122,7 +123,7 @@ const HeroSection: React.FC = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2 }}
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${images[current]})` }}
+            style={{ backgroundImage: `url(${BACKEND_URL}${images[current]})` }}
           >
             <div
               className="absolute inset-0 opacity-50"

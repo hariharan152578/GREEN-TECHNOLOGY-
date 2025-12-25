@@ -25,6 +25,8 @@ interface CertificateData {
   certificateImage: string;
 }
 
+const BACKEND_URL = "http://localhost:5000";
+
 /* ---------------- COMPONENT ---------------- */
 const CertificateSection: React.FC = () => {
   const { domainId, courseId } = usePageContext();
@@ -144,7 +146,7 @@ const CertificateSection: React.FC = () => {
               style={{ borderColor: COLORS.gold }}
             >
               <img
-                src={data.certificateImage}
+                src={`${BACKEND_URL}${data.certificateImage}`}
                 alt="Course Certificate"
                 className="w-full h-auto min-h-[300px] rounded-lg object-cover bg-gray-100"
               />

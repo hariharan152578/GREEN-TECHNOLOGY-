@@ -13,6 +13,7 @@ import ContactSection from "../../components/section/ContactSection";
 import CertificateSection from "../../components/section/CertificateSection";
 import YoutubeSection from "../../components/section/YouTubePlaylistSection";
 import DomainSlider from "../../components/section/DomainSlider";
+import StudentSuccessStories from "../../components/section/SuccessStoriesSection";
 
 const Home: React.FC = () => {
   const { setDomainId, setCourseId } = usePageContext();
@@ -37,6 +38,7 @@ const Home: React.FC = () => {
         <CareerImpactSection />
         <MaterialDownloadSection />
         <TrustedCompaniesSection />
+        <StudentSuccessStories/>
         <YoutubeSection />
         <CertificateSection />
         <ContactSection />

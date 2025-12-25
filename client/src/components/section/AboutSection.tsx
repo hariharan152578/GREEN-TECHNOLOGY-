@@ -7,12 +7,15 @@ import { usePageContext } from "../../context/usePageContext";
 /* ---------------- TYPES ---------------- */
 interface AboutData {
   label: string;
-  heading: string;
+  title: string;
   description1: string;
   description2?: string;
   mainImages: string[];
   smallImages: string[];
 }
+
+const BACKEND_URL = "http://localhost:5000";
+
 
 /* ---------------- COMPONENT ---------------- */
 const AboutSection: React.FC = () => {
@@ -81,7 +84,7 @@ const AboutSection: React.FC = () => {
 
   if (!aboutData) return null;
 
-  const { label, heading, description1, description2, mainImages, smallImages } =
+  const { label, title, description1, description2, mainImages, smallImages } =
     aboutData;
 
   /* ---------------- ANIMATION VARIANTS ---------------- */
@@ -130,7 +133,8 @@ const AboutSection: React.FC = () => {
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentMainImageIndex}
-                src={mainImages[currentMainImageIndex]}
+                src={`${BACKEND_URL}${mainImages[currentMainImageIndex]}`}
+
                 className="absolute inset-0 w-full h-full object-cover"
                 variants={imageVariants}
                 initial="initial"
@@ -144,7 +148,8 @@ const AboutSection: React.FC = () => {
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentSmallImageIndex}
-                src={smallImages[currentSmallImageIndex]}
+                src={`${BACKEND_URL}${smallImages[currentSmallImageIndex]}`}
+
                 className="absolute inset-0 w-full h-full object-cover"
                 variants={imageVariants}
                 initial="initial"
@@ -165,7 +170,7 @@ const AboutSection: React.FC = () => {
           </div>
 
           <h2 className="text-3xl md:text-4xl font-bold text-[#01311F] mb-6">
-            {heading}
+            {title}
           </h2>
 
           <p className="text-gray-600 mb-4">{description1}</p>
