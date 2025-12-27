@@ -3,6 +3,9 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
 
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* ---------------- COLORS ---------------- */
 const COLORS = {
   darkGreen: "#01311F",
@@ -36,15 +39,12 @@ const CertificateSection: React.FC = () => {
 
     const fetchCertificate = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/certificate",
-          {
-            params: {
-              domainId: domainId ?? 0,
-              courseId: courseId ?? 0,
-            },
-          }
-        );
+        const res = await axios.get(`${API_BASE_URL}/api/certificate`, {
+          params: {
+            domainId: domainId ?? 0,
+            courseId: courseId ?? 0,
+          },
+        });
 
         if (isMounted) {
           setData(res.data);
@@ -69,7 +69,6 @@ const CertificateSection: React.FC = () => {
       style={{ backgroundColor: COLORS.white }}
     >
       <div className="max-w-7xl mx-auto">
-        
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2
@@ -85,8 +84,7 @@ const CertificateSection: React.FC = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-          
-          {/* === LEFT SIDE: STEPS === */}
+          {/* LEFT: STEPS */}
           <div className="w-full lg:w-1/2 flex flex-col gap-6">
             {data.steps.map((step, index) => (
               <motion.div
@@ -126,7 +124,7 @@ const CertificateSection: React.FC = () => {
             ))}
           </div>
 
-          {/* === RIGHT SIDE: CERTIFICATE IMAGE === */}
+          {/* RIGHT: CERTIFICATE IMAGE */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -144,7 +142,7 @@ const CertificateSection: React.FC = () => {
               style={{ borderColor: COLORS.gold }}
             >
               <img
-                src={data.certificateImage}
+                src={`${API_BASE_URL}${data.certificateImage}`}
                 alt="Course Certificate"
                 className="w-full h-auto min-h-[300px] rounded-lg object-cover bg-gray-100"
               />

@@ -4,6 +4,9 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
 
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* ---------------- TYPES ---------------- */
 interface AboutData {
   label: string;
@@ -31,7 +34,7 @@ const AboutSection: React.FC = () => {
 
     const fetchAbout = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/about", {
+        const res = await axios.get(`${API_BASE_URL}/api/about`, {
           params: {
             domainId: domainId ?? 0,
             courseId: courseId ?? 0,
@@ -81,8 +84,14 @@ const AboutSection: React.FC = () => {
 
   if (!aboutData) return null;
 
-  const { label, heading, description1, description2, mainImages, smallImages } =
-    aboutData;
+  const {
+    label,
+    heading,
+    description1,
+    description2,
+    mainImages,
+    smallImages,
+  } = aboutData;
 
   /* ---------------- ANIMATION VARIANTS ---------------- */
   const containerVariants: Variants = {
@@ -130,7 +139,7 @@ const AboutSection: React.FC = () => {
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentMainImageIndex}
-                src={mainImages[currentMainImageIndex]}
+                src={`${API_BASE_URL}${mainImages[currentMainImageIndex]}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 variants={imageVariants}
                 initial="initial"
@@ -144,7 +153,7 @@ const AboutSection: React.FC = () => {
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentSmallImageIndex}
-                src={smallImages[currentSmallImageIndex]}
+                src={`${API_BASE_URL}${smallImages[currentSmallImageIndex]}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 variants={imageVariants}
                 initial="initial"

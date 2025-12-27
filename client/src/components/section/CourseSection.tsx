@@ -6,6 +6,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* ---------------- COLORS ---------------- */
 const darkGreen = "#01311F";
 const gold = "#B99A49";
@@ -56,8 +59,9 @@ const CourseCard: React.FC<{
     whileTap={{ scale: 0.98 }}
   >
     <div className="h-40 overflow-hidden">
+      {/* Course Image */}
       <img
-        src={course.image}
+        src={`${API_BASE_URL}${course.image}`}
         alt={course.title}
         className="w-full h-full object-cover transition hover:scale-110"
       />
@@ -104,10 +108,9 @@ const CourseSection: React.FC = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/courses", {
+        const res = await axios.get(`${API_BASE_URL}/api/courses`, {
           params: { domainId: domainId ?? 0 },
         });
-
         setCourses(res.data);
         setPage(0);
       } catch (err) {
@@ -192,7 +195,7 @@ const CourseSection: React.FC = () => {
                   key={course.id}
                   course={course}
                   onClick={() => {
-                    if (!domainId) return; // 🔒 safety
+                    if (!domainId) return;
                     setCourseId(course.id);
                     navigate(`/domain/${domainId}/course/${course.id}`);
                   }}

@@ -6,7 +6,14 @@ import axios from "axios";
 import LoadingPage from "../LoadingPage";
 import logo from "../../assets/logo.png";
 
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* ---------------- TYPES ---------------- */
+interface RunningText {
+  text: string;
+}
+
 interface HeroData {
   title: string;
   subtitle: string;
@@ -14,6 +21,7 @@ interface HeroData {
   ctaText: string;
   ctaLink: string;
   images: string[];
+  runningTexts: RunningText[];
 }
 
 /* ---------------- COLORS ---------------- */
@@ -27,7 +35,7 @@ const COLORS = {
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
-  const { domainId, courseId } = useParams(); // 🔥 URL IS SOURCE OF TRUTH
+  const { domainId, courseId } = useParams();
 
   const parsedDomainId = Number(domainId) || 0;
   const parsedCourseId = Number(courseId) || 0;
@@ -44,7 +52,7 @@ const HeroSection: React.FC = () => {
       try {
         setLoading(true);
 
-        const res = await axios.get("http://localhost:5000/api/hero", {
+        const res = await axios.get(`${API_BASE_URL}/api/hero`, {
           params: {
             domainId: parsedDomainId,
             courseId: parsedCourseId,
@@ -71,6 +79,7 @@ const HeroSection: React.FC = () => {
 
   /* ---------------- SLIDER LOGIC ---------------- */
   const images = heroData?.images ?? [];
+  const runningTexts = heroData?.runningTexts ?? [];
 
   useEffect(() => {
     if (!images.length) return;
@@ -96,23 +105,28 @@ const HeroSection: React.FC = () => {
   /* ---------------- UI ---------------- */
   return (
     <div className="relative w-full flex flex-col font-sans">
-      {/* RUNNING TEXT */}
-      <div
-        className="w-full py-2 overflow-hidden whitespace-nowrap"
-        style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
-      >
-        <motion.div
-          animate={{ x: [1000, -1000] }}
-          transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
-          className="font-bold text-sm flex gap-8"
+      {/* RUNNING TEXT (FROM BACKEND) */}
+      {runningTexts.length > 0 && (
+        <div
+          className="w-full py-2 overflow-hidden whitespace-nowrap"
+          style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
         >
-          <span>ADMISSIONS OPEN FOR 2025 BATCH</span>
-          <span>•</span>
-          <span>REGISTER NOW FOR EARLY BIRD DISCOUNTS</span>
-        </motion.div>
-      </div>
+          <motion.div
+            animate={{ x: [1000, -1000] }}
+            transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+            className="font-bold text-sm flex gap-8"
+          >
+            {runningTexts.map((item, index) => (
+              <React.Fragment key={index}>
+                <span>{item.text}</span>
+                {index !== runningTexts.length - 1 && <span>•</span>}
+              </React.Fragment>
+            ))}
+          </motion.div>
+        </div>
+      )}
 
-      {/* HERO */}
+      {/* HERO SLIDER */}
       <div className="relative w-full h-[90vh] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
@@ -122,7 +136,9 @@ const HeroSection: React.FC = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2 }}
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${images[current]})` }}
+            style={{
+              backgroundImage: `url(${API_BASE_URL}${images[current]})`,
+            }}
           >
             <div
               className="absolute inset-0 opacity-50"
@@ -159,8 +175,19 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        <button onClick={prevSlide} className="absolute left-6 top-1/2">‹</button>
-        <button onClick={nextSlide} className="absolute right-6 top-1/2">›</button>
+        {/* SLIDER CONTROLS */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-6 top-1/2 text-white text-4xl z-20"
+        >
+          ‹
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-6 top-1/2 text-white text-4xl z-20"
+        >
+          ›
+        </button>
       </div>
     </div>
   );

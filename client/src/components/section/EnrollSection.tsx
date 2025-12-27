@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* ---------------- COLORS ---------------- */
 const COLORS = {
   darkGreen: "#01311F",
@@ -31,7 +34,7 @@ interface EnrollSectionData {
 
 /* ---------------- COMPONENT ---------------- */
 const EnrollSection: React.FC = () => {
-  /** 🔥 URL IS SOURCE OF TRUTH (LIKE HERO) */
+  /** 🔥 URL IS SOURCE OF TRUTH */
   const { domainId, courseId } = useParams();
 
   const parsedDomainId = Number(domainId) || 0;
@@ -59,7 +62,7 @@ const EnrollSection: React.FC = () => {
     const fetchSection = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/enrollments",
+          `${API_BASE_URL}/api/enrollments`,
           {
             params: {
               domainId: parsedDomainId,
@@ -78,7 +81,6 @@ const EnrollSection: React.FC = () => {
     };
 
     fetchSection();
-
     return () => {
       mounted = false;
     };
@@ -123,12 +125,13 @@ const EnrollSection: React.FC = () => {
     payload.append("course", formData.course);
     payload.append("domainId", String(parsedDomainId));
     payload.append("courseId", String(parsedCourseId));
-    payload.append("proofImage", proofImage);
+    payload.append("file", proofImage); // ✅ FIXED FIELD NAME
 
     try {
       setLoading(true);
+
       await axios.post(
-        "http://localhost:5000/api/enrollments/request",
+        `${API_BASE_URL}/api/enrollments/request`,
         payload
       );
 
@@ -293,7 +296,7 @@ const StackCard: React.FC<{
       className="absolute w-[450px] h-[600px] rounded-3xl overflow-hidden shadow-2xl bg-white"
     >
       <img
-        src={`http://localhost:5000${card.imageUrl}`}
+        src={`${API_BASE_URL}${card.imageUrl}`}
         alt={card.title}
         className="w-full h-full object-cover"
       />

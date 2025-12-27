@@ -6,9 +6,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
+/* -------------------- CONFIG -------------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* -------------------- TYPES -------------------- */
 interface DomainSlide {
   id: number;
+  domainId: number;
+  courseId: number;
   domain: string;
   title: string;
   subtitle: string;
@@ -32,7 +37,7 @@ const DomainSection: React.FC = () => {
   useEffect(() => {
     const fetchDomains = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/domain");
+        const res = await axios.get(`${API_BASE_URL}/api/domain`);
         setDomainSlides(res.data);
       } catch (error) {
         console.error("Failed to load domains", error);
@@ -46,6 +51,9 @@ const DomainSection: React.FC = () => {
 
   const currentSlide = domainSlides[currentIndex];
 
+  /* ---------------- HELPERS ---------------- */
+  const getImageUrl = (path: string) => `${API_BASE_URL}${path}`;
+
   /* ---------------- HANDLERS ---------------- */
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % domainSlides.length);
@@ -57,15 +65,10 @@ const DomainSection: React.FC = () => {
     );
   };
 
-  /**
-   * 🔥 DOMAIN SELECTION (URL-DRIVEN)
-   */
   const handleDomainSelect = () => {
-    setDomainId(currentSlide.id);
-    setCourseId(0);
-
-    // ✅ FIX: domainId goes into URL
-    navigate(`/domain/${currentSlide.id}`);
+    setDomainId(currentSlide.domainId);
+    setCourseId(currentSlide.courseId ?? 0);
+    navigate(`/domain/${currentSlide.domainId}`);
   };
 
   /* ---------------- ANIMATIONS ---------------- */
@@ -74,16 +77,6 @@ const DomainSection: React.FC = () => {
     visible: {
       opacity: 1,
       transition: { staggerChildren: 0.3, delayChildren: 0.2 },
-    },
-  };
-
-  const imageContainerVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.9, x: -50 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      x: 0,
-      transition: { duration: 0.8 },
     },
   };
 
@@ -99,23 +92,6 @@ const DomainSection: React.FC = () => {
       scale: 0.9,
       transition: { duration: TRANSITION_DURATION },
     },
-  };
-
-  const smallImageVariants: Variants = {
-    initial: { opacity: 0, scale: 0.85, rotate: -5 },
-    animate: {
-      opacity: 1,
-      scale: 1,
-      rotate: 0,
-      transition: { duration: TRANSITION_DURATION },
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.8,
-      rotate: 5,
-      transition: { duration: TRANSITION_DURATION },
-    },
-    hover: { scale: 1.05, rotate: 2, transition: { duration: 0.3 } },
   };
 
   const contentVariants: Variants = {
@@ -139,19 +115,18 @@ const DomainSection: React.FC = () => {
         variants={containerVariants}
         className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
       >
-        {/* LEFT SIDE - IMAGES */}
+        {/* LEFT - IMAGES */}
         <div className="relative flex justify-center md:justify-start">
-          <motion.div
-            variants={imageContainerVariants}
+          <div
             className="rounded-2xl overflow-hidden shadow-2xl w-full h-[450px] md:h-[550px] relative bg-gray-200 cursor-pointer"
             onClick={handleDomainSelect}
           >
             <AnimatePresence mode="wait">
               <motion.img
-                key={`main-${currentSlide.id}`}
-                src={currentSlide.mainImageUrl}
+                key={currentSlide.id}
+                src={getImageUrl(currentSlide.mainImageUrl)}
                 alt={currentSlide.domain}
-                className="w-full h-full object-cover absolute top-0 left-0"
+                className="w-full h-full object-cover absolute"
                 variants={imageVariants}
                 initial="initial"
                 animate="animate"
@@ -174,30 +149,26 @@ const DomainSection: React.FC = () => {
                 />
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* SMALL IMAGE */}
-          <motion.div
-            variants={smallImageVariants}
-            whileHover="hover"
-            className="absolute bottom-[-40px] right-[-30px] z-10 rounded-xl overflow-hidden shadow-2xl w-[140px] h-[120px] md:w-[220px] md:h-[180px] hidden md:block border-4 border-white"
-          >
+          <div className="absolute bottom-[-40px] right-[-30px] z-10 rounded-xl overflow-hidden shadow-2xl w-[140px] h-[120px] md:w-[220px] md:h-[180px] hidden md:block border-4 border-white">
             <AnimatePresence mode="wait">
               <motion.img
                 key={`small-${currentSlide.id}`}
-                src={currentSlide.smallImageUrl}
+                src={getImageUrl(currentSlide.smallImageUrl)}
                 alt="thumb"
                 className="w-full h-full object-cover absolute"
-                variants={smallImageVariants}
+                variants={imageVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
               />
             </AnimatePresence>
-          </motion.div>
+          </div>
         </div>
 
-        {/* RIGHT SIDE - CONTENT */}
+        {/* RIGHT - CONTENT */}
         <motion.div variants={contentVariants}>
           <h2 className="text-3xl md:text-5xl font-bold text-[#01311F] mb-4">
             {currentSlide.title}
@@ -205,11 +176,13 @@ const DomainSection: React.FC = () => {
 
           <p className="text-[#B99A49] mb-6">{currentSlide.subtitle}</p>
 
-          <p className="text-gray-600 mb-8">{currentSlide.description}</p>
+          <p className="text-gray-600 mb-8">
+            {currentSlide.description}
+          </p>
 
           <div className="flex items-center gap-8 mb-10">
             <span className="text-2xl font-bold text-[#01311F]">
-              {currentSlide.price}
+              ₹{currentSlide.price}
             </span>
 
             <button
