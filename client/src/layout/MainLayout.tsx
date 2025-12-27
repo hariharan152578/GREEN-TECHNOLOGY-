@@ -178,7 +178,9 @@ export const MainLayout = () => {
       <main className="relative min-h-screen">
         <Outlet />
       </main>
-
+    <div>
+      
+    </div>
       {/* --- FLOATING COMPONENTS --- */}
       
       {/* 1. FLOATING STACK CONTAINER (Right Margin) */}

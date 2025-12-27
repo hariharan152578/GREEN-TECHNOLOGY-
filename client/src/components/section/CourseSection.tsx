@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, type Variants, AnimatePresence } from "framer-motion";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
 /* ---------------- COLORS ---------------- */
@@ -43,9 +44,13 @@ const carouselVariants = (direction: number): Variants => ({
 });
 
 /* ---------------- COURSE CARD ---------------- */
-const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
+const CourseCard: React.FC<{
+  course: Course;
+  onClick: () => void;
+}> = ({ course, onClick }) => (
   <motion.div
-    className="rounded-3xl shadow-xl overflow-hidden flex flex-col h-full"
+    onClick={onClick}
+    className="cursor-pointer rounded-3xl shadow-xl overflow-hidden flex flex-col h-full"
     style={{ backgroundColor: cream }}
     whileHover={{ scale: 1.03 }}
     whileTap={{ scale: 0.98 }}
@@ -87,7 +92,8 @@ const CourseCard: React.FC<{ course: Course }> = ({ course }) => (
 
 /* ---------------- MAIN COMPONENT ---------------- */
 const CourseSection: React.FC = () => {
-  const { domainId } = usePageContext();
+  const navigate = useNavigate();
+  const { domainId, setCourseId } = usePageContext();
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [page, setPage] = useState(0);
@@ -103,7 +109,7 @@ const CourseSection: React.FC = () => {
         });
 
         setCourses(res.data);
-        setPage(0); // 🔥 reset page on data change
+        setPage(0);
       } catch (err) {
         console.error("Failed to load courses", err);
       }
@@ -182,7 +188,15 @@ const CourseSection: React.FC = () => {
               }`}
             >
               {visibleCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  onClick={() => {
+                    if (!domainId) return; // 🔒 safety
+                    setCourseId(course.id);
+                    navigate(`/domain/${domainId}/course/${course.id}`);
+                  }}
+                />
               ))}
             </motion.div>
           </AnimatePresence>
