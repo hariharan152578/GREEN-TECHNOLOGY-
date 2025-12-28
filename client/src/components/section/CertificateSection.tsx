@@ -35,32 +35,43 @@ const CertificateSection: React.FC = () => {
 
   /* ---------------- FETCH DATA ---------------- */
   useEffect(() => {
+    // 🚫 FULL GUARD: landing page + undefined context
+    const shouldSkip =
+      domainId == null ||
+      courseId == null ||
+      (domainId === 0 && courseId === 0);
+
+    if (shouldSkip) {
+      setData(null);
+      return;
+    }
+
     let isMounted = true;
 
     const fetchCertificate = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/certificate`, {
-          params: {
-            domainId: domainId ?? 0,
-            courseId: courseId ?? 0,
-          },
+          params: { domainId, courseId },
         });
 
         if (isMounted) {
           setData(res.data);
         }
-      } catch (error) {
-        console.error("Failed to load Certificate section", error);
+      } catch {
+        // Expected for domains without certificate
+        if (isMounted) setData(null);
       }
     };
 
     fetchCertificate();
+
     return () => {
       isMounted = false;
     };
   }, [domainId, courseId]);
 
-  if (!data) return null;
+  /* ---------------- SAFE GUARD ---------------- */
+  if (!data || !data.steps?.length) return null;
 
   /* ---------------- UI ---------------- */
   return (

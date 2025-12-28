@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
 
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
+
 /* ---------------- COLORS ---------------- */
 const COLORS = {
   darkGreen: "#01311F",
@@ -15,7 +18,7 @@ const COLORS = {
 /* ---------------- TYPES ---------------- */
 interface ProjectTech {
   id: number;
-  title: string;
+  name: string; // ✅ backend uses `name`
 }
 
 interface Project {
@@ -23,25 +26,29 @@ interface Project {
   title: string;
   description: string;
   imageUrl: string;
-  ProjectTeches?: ProjectTech[];
+  tech?: ProjectTech[]; // ✅ backend sends `tech`
 }
 
 /* ---------------- CARD ---------------- */
-const ProjectCard = ({ project }: { project: Project }) => (
+const ProjectCard: React.FC<{ project: Project }> = ({ project }) => (
   <div className="h-full bg-white rounded-2xl overflow-hidden shadow-lg flex flex-col group cursor-pointer hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
     
     {/* Image */}
     <div className="h-48 overflow-hidden">
       <img
-        src={`http://localhost:5000${project.imageUrl}`}
+        src={`${API_BASE_URL}${project.imageUrl}`}
         alt={project.title}
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        onError={(e) => (e.currentTarget.src = "/no-image.png")}
       />
     </div>
 
     {/* Content */}
     <div className="p-6 flex-1 flex flex-col">
-      <h3 className="text-xl font-bold mb-3" style={{ color: COLORS.darkGreen }}>
+      <h3
+        className="text-xl font-bold mb-3"
+        style={{ color: COLORS.darkGreen }}
+      >
         {project.title}
       </h3>
 
@@ -50,17 +57,22 @@ const ProjectCard = ({ project }: { project: Project }) => (
       </p>
 
       {/* Tech Stack */}
-      <div className="flex flex-wrap gap-2 mt-auto">
-        {project.ProjectTeches?.map((tech) => (
-          <span
-            key={tech.id}
-            className="text-[10px] font-bold px-3 py-1 rounded-full border"
-            style={{ borderColor: COLORS.darkGreen, color: COLORS.darkGreen }}
-          >
-            {tech.title}
-          </span>
-        ))}
-      </div>
+      {project.tech && project.tech.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-auto">
+          {project.tech.map((tech) => (
+            <span
+              key={tech.id}
+              className="text-[10px] font-bold px-3 py-1 rounded-full border"
+              style={{
+                borderColor: COLORS.darkGreen,
+                color: COLORS.darkGreen,
+              }}
+            >
+              {tech.name}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   </div>
 );
@@ -73,17 +85,19 @@ const ProjectsSection: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(3);
 
-  /* ---------- FETCH ---------- */
+  /* ---------- FETCH PROJECTS ---------- */
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/projects", {
+        const res = await axios.get(`${API_BASE_URL}/api/projects`, {
           params: {
             domainId: domainId ?? 0,
             courseId: courseId ?? 0,
           },
         });
-        setProjects(res.data);
+
+        setProjects(res.data || []);
+        setCurrentIndex(0);
       } catch (err) {
         console.error("Failed to load projects", err);
       }
@@ -98,6 +112,7 @@ const ProjectsSection: React.FC = () => {
       setItemsPerPage(window.innerWidth < 768 ? 1 : 3);
       setCurrentIndex(0);
     };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -112,14 +127,19 @@ const ProjectsSection: React.FC = () => {
 
   /* ---------- AUTO SLIDE ---------- */
   useEffect(() => {
-    if (!totalPages) return;
+    if (totalPages <= 1) return;
+
     const timer = setInterval(
       () => setCurrentIndex((i) => (i + 1) % totalPages),
       5000
     );
+
     return () => clearInterval(timer);
   }, [totalPages]);
 
+  if (!projects.length) return null;
+
+  /* ---------------- UI ---------------- */
   return (
     <section
       className="py-24 px-6 md:px-20"

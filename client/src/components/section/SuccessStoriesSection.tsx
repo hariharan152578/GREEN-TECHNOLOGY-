@@ -1,7 +1,8 @@
 /* eslint-disable no-irregular-whitespace */
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import { usePageContext } from "../../context/usePageContext";
 
 /* ---------------- CONFIG ---------------- */
 const API_BASE_URL = "http://localhost:5000";
@@ -15,35 +16,30 @@ const COLORS = {
 };
 
 /* ---------------- TYPES ---------------- */
-interface StudentCardProps {
+interface Student {
   id: number;
-  name: string;
-  course: string;
-  rating: number;
-  review: string;
+  name?: string;
+  course?: string;
+  rating?: number;
+  review?: string;
   image?: string;
   placement?: string;
   duration?: string;
 }
 
-/* ---------------- CARD ---------------- */
-const StudentFlipCard: React.FC<StudentCardProps> = ({
+/* ---------------- FLIP CARD ---------------- */
+const StudentFlipCard: React.FC<Student> = ({
   name,
   course,
-  rating,
-  review,
+  rating = 0,
+  review = "",
   image,
   placement,
   duration = "6 months",
 }) => {
   const [hover, setHover] = useState(false);
 
-  const stars = (color: string, empty: string) =>
-    Array.from({ length: 5 }).map((_, i) => (
-      <svg key={i} className="w-4 h-4" fill={i < rating ? color : empty} viewBox="0 0 20 20">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ));
+  const firstLetter = name?.charAt(0)?.toUpperCase() || "S";
 
   return (
     <div
@@ -54,34 +50,40 @@ const StudentFlipCard: React.FC<StudentCardProps> = ({
       <motion.div
         animate={{ rotateY: hover ? 180 : 0 }}
         transition={{ duration: 0.8 }}
-        className="relative w-full h-full preserve-3d"
+        className="relative w-full h-full"
         style={{ transformStyle: "preserve-3d" }}
       >
         {/* FRONT */}
         <div className="absolute inset-0 bg-white rounded-2xl shadow-xl backface-hidden">
           <div className="h-28 bg-gradient-to-b from-[#01311F] to-[#014f32]" />
+
           <div className="-mt-16 flex justify-center">
-            <div className="w-32 h-32 rounded-full border-4 overflow-hidden bg-white border-[#B99A49]">
+            <div className="w-32 h-32 rounded-full border-4 overflow-hidden bg-white border-[#B99A49] flex items-center justify-center">
               {image ? (
                 <img
                   src={`${API_BASE_URL}${image}`}
                   className="w-full h-full object-cover"
-                  onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                  alt={name || "Student"}
+                  onError={(e) =>
+                    ((e.target as HTMLImageElement).style.display = "none")
+                  }
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-4xl font-bold text-[#01311F]">
-                  {name[0]}
-                </div>
+                <div className="text-4xl font-bold">{firstLetter}</div>
               )}
             </div>
           </div>
 
           <div className="p-6 text-center">
-            <h3 className="text-xl font-bold text-[#01311F]">{name}</h3>
+            <h3 className="text-xl font-bold text-[#01311F]">
+              {name || "Student"}
+            </h3>
             <p className="text-xs uppercase opacity-70">{course}</p>
 
             <div className="flex justify-center gap-1 my-4">
-              {stars(COLORS.gold, "#ddd")}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i}>{i < rating ? "⭐" : "☆"}</span>
+              ))}
             </div>
 
             <div className="flex justify-between mt-6 border-t pt-4 text-sm">
@@ -89,6 +91,7 @@ const StudentFlipCard: React.FC<StudentCardProps> = ({
                 <p className="text-gray-400 text-xs">Duration</p>
                 <p className="font-bold">{duration}</p>
               </div>
+
               {placement && (
                 <div>
                   <p className="text-gray-400 text-xs">Placed At</p>
@@ -102,7 +105,10 @@ const StudentFlipCard: React.FC<StudentCardProps> = ({
         {/* BACK */}
         <div
           className="absolute inset-0 rounded-2xl flex items-center justify-center p-8 text-center backface-hidden"
-          style={{ backgroundColor: COLORS.gold, transform: "rotateY(180deg)" }}
+          style={{
+            backgroundColor: COLORS.gold,
+            transform: "rotateY(180deg)",
+          }}
         >
           <p className="italic text-lg">"{review}"</p>
         </div>
@@ -111,39 +117,55 @@ const StudentFlipCard: React.FC<StudentCardProps> = ({
   );
 };
 
-/* ---------------- MAIN ---------------- */
-const StudentSuccessStories: React.FC<{ domainId?: number; courseId?: number }> = ({
-  domainId = 0,
-  courseId = 0,
-}) => {
-  const [students, setStudents] = useState<StudentCardProps[]>([]);
+/* ---------------- MAIN SECTION ---------------- */
+const SuccessStoriesSection: React.FC = () => {
+  const { domainId, courseId } = usePageContext();
+  const [students, setStudents] = useState<Student[]>([]);
   const [index, setIndex] = useState(0);
+
   const itemsPerPage = window.innerWidth < 768 ? 1 : 3;
 
+  /* ---------------- FETCH DATA ---------------- */
   useEffect(() => {
+    // 🚫 Skip landing page
+    if (domainId == null && courseId == null) {
+      setStudents([]);
+      return;
+    }
+
+    const params: any = {};
+    if (domainId > 0) params.domainId = domainId;
+    if (courseId > 0) params.courseId = courseId;
+
     axios
-      .get(`${API_BASE_URL}/api/student-success`, {
-        params: { domainId, courseId },
+      .get(`${API_BASE_URL}/api/student-success`, { params })
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setStudents(res.data);
+        } else {
+          setStudents([]);
+        }
       })
-      .then((res) => setStudents(res.data))
-      .catch(console.error);
+      .catch(() => setStudents([]));
   }, [domainId, courseId]);
 
   const totalPages = Math.ceil(students.length / itemsPerPage);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((i) => (i + 1) % totalPages);
-    }, 5000);
+    if (totalPages <= 1) return;
+    const timer = setInterval(
+      () => setIndex((i) => (i + 1) % totalPages),
+      5000
+    );
     return () => clearInterval(timer);
   }, [totalPages]);
+
+  if (!students.length) return null;
 
   const visible = students.slice(
     index * itemsPerPage,
     index * itemsPerPage + itemsPerPage
   );
-
-  if (!students.length) return null;
 
   return (
     <section className="py-24 px-6" style={{ backgroundColor: COLORS.darkGreen }}>
@@ -152,26 +174,24 @@ const StudentSuccessStories: React.FC<{ domainId?: number; courseId?: number }> 
           Student Success Stories
         </h2>
 
-        <div className="relative min-h-[480px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={index}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={`grid gap-8 ${
-                itemsPerPage === 1 ? "grid-cols-1" : "md:grid-cols-3"
-              }`}
-            >
-              {visible.map((s) => (
-                <StudentFlipCard key={s.id} {...s} />
-              ))}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={`grid gap-8 ${
+              itemsPerPage === 1 ? "grid-cols-1" : "md:grid-cols-3"
+            }`}
+          >
+            {visible.map((s) => (
+              <StudentFlipCard key={s.id} {...s} />
+            ))}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );
 };
 
-export default StudentSuccessStories;
+export default SuccessStoriesSection;
