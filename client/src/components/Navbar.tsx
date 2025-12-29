@@ -1,25 +1,32 @@
-import { useState, useEffect } from "react"
-import logo from "../assets/logo.png"
+import { useEffect, useState } from "react";
+import axios from "axios";
+import logo from "../assets/logo.png";
+
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = "http://localhost:5000";
 
 const Navbar = () => {
-  // 1. Define your dynamic content here
-  const [notices] = useState([
-    "Welcome to our official website",
-    "International Conference 2025",
-    "Register Now 🚀",
-    "New Batch starts from Monday",
-    "Limited seats available for DevOps workshop"
-  ]);
+  const [notices, setNotices] = useState<string[]>([]);
 
-  // 2. Join notices with a separator for the marquee effect
-  const marqueeText = notices.join(" | ");
+  /* ---------------- FETCH NOTICES ---------------- */
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/api/notices`)
+      .then(res => setNotices(res.data))
+      .catch(err => console.error("Error fetching notices", err));
+  }, []);
+
+  const marqueeText =
+    notices.length > 0
+      ? notices.join(" | ")
+      : "Welcome to our official website";
 
   return (
     <>
-      {/* Top Navbar */}
+      {/* TOP NAVBAR */}
       <div className="w-full bg-[#01311F] text-[#F0ECE3] h-16 flex items-center px-4 md:px-6 justify-between">
-        
-        {/* Left - Logo */}
+
+        {/* LOGO */}
         <div className="shrink-0">
           <img
             src={logo}
@@ -28,32 +35,32 @@ const Navbar = () => {
           />
         </div>
 
-        {/* Center - Running Text (DESKTOP ONLY) */}
-        <div className="hidden md:flex flex-1 mx-10 overflow-hidden whitespace-nowrap relative">
-          <p className="animate-marquee inline-block text-sm md:text-base">
+        {/* MARQUEE (DESKTOP) */}
+        <div className="hidden md:flex flex-1 mx-10 overflow-hidden whitespace-nowrap">
+          <p className="animate-marquee text-sm md:text-base">
             {marqueeText}
           </p>
         </div>
 
-        {/* Right - Contact */}
+        {/* CONTACT */}
         <div className="shrink-0">
-          <a 
-            href="tel:+919876543210" 
-            className="text-xs md:text-base font-semibold hover:text-[#B99A49] transition-colors"
+          <a
+            href="tel:+919876543210"
+            className="text-xs md:text-base font-semibold hover:text-[#B99A49]"
           >
             📞 +91 98765 43210
           </a>
         </div>
       </div>
 
-      {/* Running Text BELOW Navbar (MOBILE ONLY) */}
-      <div className="md:hidden w-full bg-[#01311F] border-t border-white/10 text-[#F0ECE3] overflow-hidden whitespace-nowrap py-2">
-        <p className="animate-marquee inline-block text-sm">
+      {/* MARQUEE (MOBILE) */}
+      <div className="md:hidden w-full bg-[#01311F] border-t border-white/10 text-[#F0ECE3] overflow-hidden py-2">
+        <p className="animate-marquee text-sm whitespace-nowrap">
           {marqueeText}
         </p>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
