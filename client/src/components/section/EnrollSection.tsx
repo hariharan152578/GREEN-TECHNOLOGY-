@@ -12,6 +12,7 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
+/* ---------------- TYPES ---------------- */
 interface EnrollCard { id: number; title: string; image: string; order: number; }
 interface Domain { id: number; domain: string; }
 interface Course { id: number; domainId: number; title: string; }
@@ -21,29 +22,42 @@ const EnrollSection: React.FC = () => {
   const [domains, setDomains] = useState<Domain[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [cards, setCards] = useState<EnrollCard[]>([]);
+  
   const [selectedDomainId, setSelectedDomainId] = useState(Number(domainId) || 0);
   const [selectedCourseId, setSelectedCourseId] = useState<number>(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [proofImage, setProofImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  /* ---------------- DATA FETCHING ---------------- */
   useEffect(() => {
     axios.get(`${API_BASE_URL}/api/domain`).then(res => setDomains(res.data));
   }, []);
 
   useEffect(() => {
-    if (!selectedDomainId) return setCourses([]);
+    if (!selectedDomainId) {
+      setCourses([]);
+      return;
+    }
     axios.get(`${API_BASE_URL}/api/courses`, { params: { domainId: selectedDomainId } })
       .then(res => setCourses(res.data));
   }, [selectedDomainId]);
 
   useEffect(() => {
-    if (!selectedDomainId) return setCards([]);
+    if (!selectedDomainId) {
+      setCards([]);
+      return;
+    }
     axios.get(`${API_BASE_URL}/api/enroll-cards`, { params: { domainId: selectedDomainId, courseId: selectedCourseId || 0 } })
-      .then(res => { setCards(res.data); setActiveIndex(0); });
+      .then(res => { 
+        setCards(res.data); 
+        setActiveIndex(0); 
+      });
   }, [selectedDomainId, selectedCourseId]);
 
   const sortedCards = useMemo(() => [...cards].sort((a, b) => a.order - b.order), [cards]);
@@ -54,41 +68,73 @@ const EnrollSection: React.FC = () => {
     return () => clearInterval(timer);
   }, [sortedCards, paused]);
 
+  /* ---------------- FORM SUBMISSION ---------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDomainId || !selectedCourseId || !proofImage) return alert("Missing fields");
+    setError(null);
+
+    // Strict Validation
+    if (!selectedDomainId || !selectedCourseId) {
+      return alert("Please select both a Domain and a Course.");
+    }
+    if (!proofImage) {
+      return alert("Please upload your payment receipt image.");
+    }
+
     const payload = new FormData();
-    Object.entries(formData).forEach(([k, v]) => payload.append(k, v));
+    // These keys must match the destructuring in your controller
+    payload.append("name", formData.name);
+    payload.append("email", formData.email);
+    payload.append("phone", formData.phone);
     payload.append("domainId", String(selectedDomainId));
     payload.append("courseId", String(selectedCourseId));
-    payload.append("file", proofImage);
+    payload.append("file", proofImage); // Matches uploadEnrollmentProof.single("file")
 
     setLoading(true);
     try {
       await axios.post(`${API_BASE_URL}/api/enrollments/request`, payload);
       setSuccess(true);
-    } catch (err) { console.error(err); } 
-    finally { setLoading(false); }
+      
+      // Reset logic
+      setFormData({ name: "", email: "", phone: "" });
+      setProofImage(null);
+      setSelectedCourseId(0);
+      
+      setTimeout(() => setSuccess(false), 5000);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data?.message || "Submission failed. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <section className="relative w-full min-h-screen flex items-center justify-center py-16 px-4 sm:px-10 lg:px-20 bg-[#fbfaf8]">
-      {/* Dynamic Background Accent */}
       <div className="absolute inset-0 bg-[#01311F] h-[40%] w-full pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 60%, 0 100%)' }} />
 
       <div className="relative z-10 max-w-6xl w-full flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-8">
         
-        {/* LEFT: VISUAL STACK - Sized to be the star */}
+        {/* LEFT: VISUAL STACK */}
         <div className="w-full lg:w-1/2 flex flex-col items-center justify-center space-y-10">
           <div 
             className="relative w-[260px] h-[360px] sm:w-[320px] sm:h-[440px] lg:w-[380px] lg:h-[520px]"
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
           >
-            {sortedCards.map((card, index) => {
-              const position = (index - activeIndex + sortedCards.length) % sortedCards.length;
-              return <AnimatedStackCard key={card.id} card={card} position={position} />;
-            })}
+            {sortedCards.length > 0 ? (
+              sortedCards.map((card, index) => {
+                const position = (index - activeIndex + sortedCards.length) % sortedCards.length;
+                return <AnimatedStackCard key={card.id} card={card} position={position} />;
+              })
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center border-4 border-dashed border-gray-300 rounded-[2rem] text-gray-400 font-medium text-center px-4">
+                Select a domain to preview your journey
+              </div>
+            )}
           </div>
           
           <div className="flex gap-2">
@@ -102,7 +148,7 @@ const EnrollSection: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT: COMPACT FORM - Sized to be clean & professional */}
+        {/* RIGHT: COMPACT FORM */}
         <div className="w-full lg:w-[450px] xl:w-[480px]">
           <motion.div
             initial={{ opacity: 0, x: 30 }}
@@ -111,29 +157,60 @@ const EnrollSection: React.FC = () => {
           >
             <header className="mb-8">
               <h2 className="text-2xl sm:text-3xl font-bold text-[#B99A49] tracking-tight">Enrollment Form</h2>
-              <p className="text-cream/60 text-sm mt-1">Fill in the details to get started.</p>
+              <p className="text-cream/60 text-sm mt-1">Complete the details to start your course.</p>
             </header>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input placeholder="Full Name" value={formData.name} onChange={(v: string) => setFormData({...formData, name: v})} />
+              <Input 
+                placeholder="Full Name" 
+                value={formData.name} 
+                onChange={(v) => setFormData({...formData, name: v})} 
+                required 
+              />
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input placeholder="Email" type="email" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} />
-                <Input placeholder="Phone" type="tel" value={formData.phone} onChange={(v: string) => setFormData({...formData, phone: v})} />
+                <Input 
+                  placeholder="Email" 
+                  type="email" 
+                  value={formData.email} 
+                  onChange={(v) => setFormData({...formData, email: v})} 
+                  required 
+                />
+                <Input 
+                  placeholder="Phone" 
+                  type="tel" 
+                  value={formData.phone} 
+                  onChange={(v) => setFormData({...formData, phone: v})} 
+                  required
+                />
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Select value={selectedDomainId} options={domains.map(d => ({ label: d.domain, value: d.id }))} 
-                  onChange={(v: string) => { setSelectedDomainId(Number(v)); setSelectedCourseId(0); }} label="Domain" />
-                <Select value={selectedCourseId} options={courses.map(c => ({ label: c.title, value: c.id }))} 
-                  onChange={(v: string) => setSelectedCourseId(Number(v))} disabled={!courses.length} label="Course" />
+                <Select 
+                  value={selectedDomainId} 
+                  options={domains.map(d => ({ label: d.domain, value: d.id }))} 
+                  onChange={(v) => { setSelectedDomainId(Number(v)); setSelectedCourseId(0); }} 
+                  label="Select Domain" 
+                />
+                <Select 
+                  value={selectedCourseId} 
+                  options={courses.map(c => ({ label: c.title, value: c.id }))} 
+                  onChange={(v) => setSelectedCourseId(Number(v))} 
+                  disabled={!courses.length} 
+                  label={selectedDomainId ? "Select Course" : "Choose Domain First"} 
+                />
               </div>
 
               <div className="pt-2">
                 <label className="text-[10px] text-[#B99A49] font-bold uppercase tracking-[0.2em] mb-2 block ml-1">Payment Receipt</label>
                 <label className="flex items-center justify-center w-full py-3 px-4 border-2 border-dashed border-white/10 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-all text-cream/70 text-sm">
-                  <input type="file" accept="image/*" className="hidden" onChange={e => setProofImage(e.target.files?.[0] || null)} />
-                  {proofImage ? proofImage.name : "Upload Image"}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={e => setProofImage(e.target.files?.[0] || null)} 
+                  />
+                  <span className="truncate">{proofImage ? proofImage.name : "Upload Receipt Image"}</span>
                 </label>
               </div>
 
@@ -141,7 +218,7 @@ const EnrollSection: React.FC = () => {
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={loading}
-                className="w-full mt-4 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all shadow-lg shadow-black/20"
+                className="w-full mt-4 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all shadow-lg shadow-black/20 disabled:opacity-50"
                 style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
               >
                 {loading ? "Processing..." : "Submit Application"}
@@ -149,8 +226,13 @@ const EnrollSection: React.FC = () => {
 
               <AnimatePresence>
                 {success && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-green-400 text-center text-xs font-bold pt-2">
-                    ✓ Your enrollment has been sent!
+                  <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-green-400 text-center text-xs font-bold pt-2">
+                    ✓ Enrollment submitted for review!
+                  </motion.p>
+                )}
+                {error && (
+                  <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-red-400 text-center text-xs font-bold pt-2">
+                    {error}
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -199,7 +281,7 @@ const AnimatedStackCard: React.FC<{ card: EnrollCard; position: number; }> = ({ 
     1: { x: 30, y: -20, scale: 0.94, zIndex: 20, opacity: 0.8, rotate: 2 },
     2: { x: 60, y: -40, scale: 0.88, zIndex: 10, opacity: 0.4, rotate: 4 },
   };
-  const currentStyle = variants[position] || { x: 100, opacity: 0, scale: 0.8 };
+  const currentStyle = variants[position] || { x: 100, opacity: 0, scale: 0.8, zIndex: 0, y: 0, rotate: 0 };
 
   return (
     <motion.div
@@ -207,7 +289,7 @@ const AnimatedStackCard: React.FC<{ card: EnrollCard; position: number; }> = ({ 
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className="absolute inset-0 rounded-[2rem] border-[8px] border-white shadow-2xl overflow-hidden bg-white"
     >
-      <img src={`${API_BASE_URL}${card.image}`} alt="" className="w-full h-full object-cover" />
+      <img src={`${API_BASE_URL}${card.image}`} alt={card.title} className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent flex items-end p-6">
         <h3 className="text-white text-lg font-bold leading-tight tracking-tight">{card.title}</h3>
       </div>

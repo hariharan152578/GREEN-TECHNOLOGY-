@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
 import LoadingPage from "../LoadingPage";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/Greens.png";
 
 /* ---------------- CONFIG ---------------- */
 const API_BASE_URL = "http://localhost:5000";
