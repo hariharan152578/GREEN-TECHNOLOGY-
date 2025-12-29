@@ -1,349 +1,137 @@
+/* eslint-disable no-irregular-whitespace */
 import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import AdvertisementPopup from "../components/AdvertisementPopup";
 import FaqChatbotModal from "../components/FaqChatbotModal";
+import EnrollSection from "../components/section/EnrollSection";
 
-// --- Color Palette Constants ---
+/* ---------------- COLORS ---------------- */
 const COLORS = {
   darkGreen: "#01311F",
   gold: "#B99A49",
   cream: "#F0ECE3",
   white: "#FFFFFF",
-  gray: "#CCCCCC"
+  gray: "#CCCCCC",
 };
 
-// --- ANIMATION VARIANTS ---
+/* ---------------- ANIMATION VARIANTS ---------------- */
 
-// 1. DNA HELIX SPIRAL for Stack Items
 const dnaHelixVariants: Variants = {
-  hidden: (i: number) => ({
-    opacity: 0,
-    x: 50,
-    y: -20, // Slide from top slightly
-    rotate: 180,
-    scale: 0.2,
-  }),
+  hidden: { opacity: 0, x: 20, scale: 0.8 },
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
-    y: 0,
-    rotate: 0,
     scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 20,
-      delay: i * 0.15,
-      rotate: { type: "spring", stiffness: 200, damping: 15 }
-    }
+    transition: { delay: i * 0.1, type: "spring", stiffness: 260, damping: 20 },
   }),
-  exit: (i: number) => ({
-    opacity: 0,
-    x: 50,
-    y: -20,
-    rotate: -180,
-    scale: 0.2,
-    transition: { duration: 0.3, delay: i * 0.05 }
-  })
+  exit: { opacity: 0, x: 20, scale: 0.5, transition: { duration: 0.2 } },
 };
 
-// 2. INFINITY SIGN PATH for Enquiry Form
 const infinityEnquiryVariants: Variants = {
-  initial: { 
-    opacity: 0,
-    pathLength: 0,
-    rotate: -90,
-  },
-  animate: { 
-    opacity: 1,
-    pathLength: 1,
-    rotate: 0,
-    transition: { 
-      rotate: { type: "spring", stiffness: 150, damping: 20 },
-      pathLength: { duration: 2, ease: "easeInOut" },
-      opacity: { duration: 0.5 }
-    }
-  },
+  initial: { opacity: 0, x: 50 },
+  animate: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 100 } },
   hover: {
-    scale: 1.1,
-    rotate: [0, 10, -10, 0],
-    transition: {
-      rotate: { duration: 0.5, repeat: Infinity, repeatDelay: 2 },
-      scale: { type: "spring", stiffness: 400 }
-    }
-  }
-};
-
-// 3. NEON PULSE for Interactive Elements
-const neonPulseVariants: Variants = {
-  initial: { scale: 0.8, opacity: 0 },
-  animate: {
-    scale: 1,
-    opacity: 1,
-    boxShadow: [
-      "0 0 10px rgba(185, 154, 73, 0.3)",
-      "0 0 20px rgba(185, 154, 73, 0.5)",
-      "0 0 30px rgba(185, 154, 73, 0.7)",
-      "0 0 20px rgba(185, 154, 73, 0.5)",
-      "0 0 10px rgba(185, 154, 73, 0.3)"
-    ],
-    transition: {
-      scale: { type: "spring", stiffness: 200 },
-      boxShadow: {
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  }
-};
-
-// 4. MESSAGE BUBBLE FLOAT Animation
-const messageFloatVariants: Variants = {
-  initial: { y: 20, opacity: 0, scale: 0.8 },
-  animate: {
-    y: [0, -10, 0],
-    opacity: 1,
-    scale: 1,
-    transition: {
-      y: {
-        duration: 3,
-        repeat: Infinity,
-        ease: "easeInOut"
-      },
-      scale: { type: "spring", stiffness: 300 }
-    }
-  }
+    scale: 1.05,
+    transition: { duration: 0.3 },
+  },
 };
 
 export const MainLayout = () => {
-  const [showAd, setShowAd] = useState(false);
-  const offerPoster = "https://www.shutterstock.com/image-vector/special-offer-banner-vector-template-260nw-2474802375.jpg";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStackOpen, setIsStackOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
-  // --- STATE FOR FLOATING UI ---
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // For Enquiry
-  const [isStackOpen, setIsStackOpen] = useState<boolean>(false); // For Floating Buttons
-  const [isChatbotOpen, setIsChatbotOpen] = useState<boolean>(false); // For FAQ Chatbot
-
-  // --- LOGIC FOR FLOATING UI ---
-  const toggleModal = (): void => {
-    setIsModalOpen(prev => !prev);
+  const toggleModal = () => setIsModalOpen((p) => !p);
+  const toggleChat = () => {
+    setIsChatbotOpen((p) => !p);
+    setIsStackOpen(false);
   };
-
-  const toggleChat = (): void => {
-    setIsChatbotOpen(prev => !prev);
-    // Optionally close the stack when chat opens to keep UI clean
-    if (!isChatbotOpen) setIsStackOpen(false); 
-  };
-
-  const handleWhatsApp = (): void => {
-    // Replace with your actual WhatsApp link
+  const handleWhatsApp = () => {
     window.open("https://wa.me/8870295336", "_blank");
   };
 
-  // Listen for "Enrol Now" clicks from other components
   useEffect(() => {
-    const handleEnrolEvent = () => setIsModalOpen(true);
-    window.addEventListener('open-enrolment', handleEnrolEvent);
-
-    // Show popup after 2 seconds
-    const timer = setTimeout(() => {
-      setShowAd(true);
-    }, 2000);
-
+    const enrolListener = () => setIsModalOpen(true);
+    window.addEventListener("open-enrolment", enrolListener);
+    const timer = setTimeout(() => setIsModalOpen(true), 2000);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('open-enrolment', handleEnrolEvent);
+      window.removeEventListener("open-enrolment", enrolListener);
     };
   }, []);
 
   return (
     <>
-      {/* Advertisement Popup */}
-      <AdvertisementPopup
-        isOpen={showAd}
-        onClose={() => setShowAd(false)}
-        posterUrl={offerPoster}
-      />
-
-      {/* Navbar */}
       <div className="sticky top-0 z-50">
         <Navbar />
       </div>
 
-      {/* Main Content */}
       <main className="relative min-h-screen">
         <Outlet />
       </main>
-    <div>
-      
-    </div>
-      {/* --- FLOATING COMPONENTS --- */}
-      
-      {/* 1. FLOATING STACK CONTAINER (Right Margin) */}
-      <div className="fixed bottom-10 right-0 z-[60] flex flex-col items-end gap-4 font-sans pr-4">
+
+      {/* FLOATING STACK - RESPONSIVE POSITIONING */}
+      <div className="fixed bottom-6 right-0 sm:bottom-10 sm:right-0 z-[60] flex flex-col items-end gap-3 sm:gap-4 pr-0 sm:pr-4">
         
-        {/* ORDER 1: Enquiry Form - Infinity Symbol (TOP) */}
+        {/* SIDE BAR ENQUIRY - Hidden on tiny screens, or made smaller */}
         <motion.div
-            variants={infinityEnquiryVariants}
-            initial="initial"
-            animate="animate"
-            whileHover="hover"
-            whileTap={{ scale: 0.95 }}
-            className="cursor-pointer shadow-2xl rounded-l-2xl border-l-4 border-y-4 border-white/20 flex items-center justify-center relative overflow-hidden -mr-4" // Negative margin to align with edge
-            style={{ backgroundColor: COLORS.gold }}
-            onClick={toggleModal}
+          variants={infinityEnquiryVariants}
+          initial="initial"
+          animate="animate"
+          whileHover="hover"
+          className="cursor-pointer rounded-l-xl sm:rounded-l-2xl border-l-2 sm:border-l-4 border-y-2 sm:border-y-4 border-white/20 shadow-xl"
+          style={{ backgroundColor: COLORS.gold }}
+          onClick={toggleModal}
         >
-            <motion.svg 
-                width="60" 
-                height="80" 
-                className="absolute"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-                <path
-                    d="M20 40 Q30 20 40 40 Q50 60 60 40 M60 40 Q50 20 40 40 Q30 60 20 40"
-                    fill="none"
-                    stroke={COLORS.darkGreen}
-                    strokeWidth="2"
-                />
-            </motion.svg>
-            
-            <div 
-                className="py-6 px-2 flex items-center justify-center z-10"
-                style={{ 
-                    color: COLORS.darkGreen,
-                    writingMode: "vertical-rl", 
-                    textOrientation: "mixed"
-                }}
-            >
-                <span className="font-bold tracking-widest text-xs whitespace-nowrap transform rotate-180">
-                    ENQUIRY FORM
-                </span>
-            </div>
+          <div
+            className="py-4 px-1 sm:py-6 sm:px-2"
+            style={{
+              writingMode: "vertical-rl",
+              textOrientation: "mixed",
+              color: COLORS.darkGreen,
+            }}
+          >
+            <span className="font-bold tracking-widest text-[10px] sm:text-xs rotate-180">
+              ENQUIRY FORM
+            </span>
+          </div>
         </motion.div>
 
-        {/* ORDER 2: Hidden Items Container (Chat & Whatsapp) - (MIDDLE) */}
+        {/* STACK ITEMS */}
         <AnimatePresence>
           {isStackOpen && (
-            <motion.div 
-              variants={{
-                visible: { transition: { staggerChildren: 0.1 } }
-              }}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="flex flex-col gap-6 items-end mr-2"
-            >
-               {/* Chatbot Trigger */}
-               <motion.div 
-                 custom={0}
-                 variants={dnaHelixVariants}
-                 className="relative group"
-               >
-                 <motion.div
-                     variants={messageFloatVariants}
-                     initial="initial"
-                     animate="animate"
-                     className="absolute -top-16 -right-4 bg-white px-4 py-2 rounded-lg shadow-lg z-20 whitespace-nowrap"
-                     style={{ color: COLORS.darkGreen }}
-                 >
-                     <span className="text-xs font-bold">Hi! Need help?</span>
-                     <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent" style={{ borderTopColor: COLORS.white }} />
-                 </motion.div>
-                 
-                 <FloatingButton 
-                     label="AI Chatbot" 
-                     color={COLORS.cream} 
-                     textColor={COLORS.darkGreen}
-                     onClick={toggleChat} 
-                 >
-                     <motion.div
-                         animate={{ rotate: [0, 20, -20, 0] }}
-                         transition={{ duration: 2, repeat: Infinity }}
-                     >
-                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c-5.5 0-10 3.6-10 8 0 4.4 4.5 8 10 8a13 13 0 0 0 1.9-.1l4.8 2.8c.4.2 1-.1.9-.6l-.7-3.2c2-1.6 3.1-3.8 3.1-6.1 0-4.4-4.5-8-10-8Z"/></svg>
-                     </motion.div>
-                 </FloatingButton>
-               </motion.div>
-               
-               {/* WhatsApp Trigger */}
-               <motion.div 
-                 custom={1}
-                 variants={dnaHelixVariants}
-               >
-                 <FloatingButton 
-                     label="WhatsApp" 
-                     color={COLORS.gold} 
-                     textColor={COLORS.darkGreen} 
-                     variants={neonPulseVariants}
-                     pulse={true}
-                     onClick={handleWhatsApp}
-                 >
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/></svg>
-                 </FloatingButton>
-               </motion.div>
+            <motion.div className="flex flex-col gap-3 sm:gap-4 items-end mr-4">
+              <motion.div variants={dnaHelixVariants} custom={1} initial="hidden" animate="visible" exit="exit">
+                <FloatingButton label="AI Chat" color={COLORS.cream} textColor={COLORS.darkGreen} onClick={toggleChat}>
+                  💬
+                </FloatingButton>
+              </motion.div>
+
+              <motion.div variants={dnaHelixVariants} custom={2} initial="hidden" animate="visible" exit="exit">
+                <FloatingButton label="WhatsApp" color={COLORS.gold} textColor={COLORS.darkGreen} onClick={handleWhatsApp}>
+                  📞
+                </FloatingButton>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ORDER 3: Main Stack Toggle Button - (BOTTOM) */}
-        <motion.button 
-            onClick={() => setIsStackOpen(!isStackOpen)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            animate={{ 
-                rotate: isStackOpen ? 180 : 0,
-            }}
-            transition={{
-                rotate: { type: "spring", stiffness: 200, damping: 15 }
-            }}
-            className="mr-2 p-4 rounded-full shadow-2xl border-2 border-transparent relative z-50 overflow-hidden"
-            style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsStackOpen((p) => !p)}
+          className="mr-4 p-3 sm:p-4 rounded-full shadow-2xl border border-gray-100"
+          style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
         >
-            {/* Magnetic Field Rings */}
-            <motion.div 
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: COLORS.gold }}
-                animate={{
-                    scale: [1, 1.5, 2],
-                    opacity: [0.7, 0.4, 0],
-                }}
-                transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeOut"
-                }}
-            />
-            <motion.div 
-                className="absolute inset-0 rounded-full border-2"
-                style={{ borderColor: COLORS.gold }}
-                animate={{
-                    scale: [1, 1.8, 2.2],
-                    opacity: [0.5, 0.2, 0],
-                }}
-                transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeOut",
-                    delay: 0.5
-                }}
-            />
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          <span className={`inline-block transition-transform duration-300 ${isStackOpen ? 'rotate-180' : ''}`}>
+             ⬆
+          </span>
         </motion.button>
-        
       </div>
 
-      {/* --- MODALS --- */}
-      
-      {/* ENROLLMENT MODAL */}
       <EnrollmentModal isOpen={isModalOpen} onClose={toggleModal} colors={COLORS} />
 
-      {/* CHATBOT MODAL */}
       <FaqChatbotModal
         isOpen={isChatbotOpen}
         onClose={() => setIsChatbotOpen(false)}
@@ -355,137 +143,61 @@ export const MainLayout = () => {
   );
 };
 
-// --- SUB COMPONENTS ---
+/* ---------------- FLOATING BUTTON - RESPONSIVE ---------------- */
 
-// Floating Button
-interface FloatingBtnProps {
-    children: React.ReactNode;
-    label: string;
-    color: string;
-    textColor: string;
-    pulse?: boolean;
-    variants?: Variants;
-    onClick?: () => void;
-}
+const FloatingButton = ({ children, label, color, textColor, onClick }: FloatingBtnProps) => (
+  <div className="flex items-center gap-2 cursor-pointer group" onClick={onClick}>
+    <span className="hidden sm:block bg-white px-3 py-1 rounded-md text-xs font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+      {label}
+    </span>
+    {/* Label for Mobile */}
+    <span className="sm:hidden bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold shadow-sm">
+      {label}
+    </span>
+    <div
+      className="w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl text-lg sm:text-xl"
+      style={{ backgroundColor: color, color: textColor }}
+    >
+      {children}
+    </div>
+  </div>
+);
 
-const FloatingButton = ({ children, label, color, textColor, pulse = false, variants, onClick }: FloatingBtnProps) => {
-    return (
-        <motion.div 
-            variants={variants}
-            className="flex items-center gap-2 cursor-pointer group relative"
-            onClick={onClick}
-        >
-            <motion.span 
-                className="absolute right-14 bg-white px-3 py-1 rounded-md text-xs font-bold shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-30"
-                style={{ color: COLORS.darkGreen }}
-                initial={{ y: 10, opacity: 0 }}
-                whileHover={{ y: 0, opacity: 1 }}
-                transition={{ type: "spring" }}
-            >
-                {label}
-            </motion.span>
-
-            <motion.div 
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                whileTap={{ scale: 0.9 }}
-                animate={pulse ? { 
-                    boxShadow: [
-                        `0 0 0 0px ${color}80`,
-                        `0 0 0 12px ${color}00`,
-                        `0 0 0 0px ${color}80`
-                    ],
-                } : {}}
-                transition={pulse ? { 
-                    boxShadow: { duration: 2, repeat: Infinity } 
-                } : {}}
-                className="w-14 h-14 rounded-full shadow-2xl flex items-center justify-center relative z-10 border-2 border-white/30"
-                style={{ backgroundColor: color, color: textColor }}
-            >
-                {children}
-            </motion.div>
-        </motion.div>
-    )
-}
-
-// Enrollment Modal
-interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    colors: typeof COLORS;
-}
-
-const modalVariants: Variants = {
-    hidden: { opacity: 0, backdropFilter: "blur(0px)" },
-    visible: { 
-        opacity: 1, 
-        backdropFilter: "blur(10px)",
-        transition: { duration: 0.3 }
-    },
-};
-
-const formVariants: Variants = {
-    hidden: { scale: 0.8, opacity: 0, y: -50, rotateX: 90 },
-    visible: { 
-        scale: 1, opacity: 1, y: 0, rotateX: 0,
-        transition: { type: "spring", stiffness: 400, damping: 30, rotateX: { stiffness: 300 } } 
-    },
-    exit: { scale: 0.8, opacity: 0, y: 50, transition: { duration: 0.2 } },
-};
+/* ---------------- ENROLLMENT MODAL - RESPONSIVE FIX ---------------- */
 
 const EnrollmentModal: React.FC<ModalProps> = ({ isOpen, onClose, colors }) => {
-    if (!isOpen) return null;
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        alert("Enrolment form submitted! We will contact you soon.");
-        onClose();
-    };
-    return (
-        <AnimatePresence>
-            {isOpen && (
-                <motion.div
-                    className="fixed inset-0 flex items-center justify-center z-[100] p-4 font-sans"
-                    style={{ backgroundColor: `${colors.darkGreen}E6` }}
-                    variants={modalVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="hidden"
-                    onClick={onClose}
-                >
-                    <motion.div
-                        className="w-full max-w-lg p-8 rounded-2xl shadow-2xl relative overflow-hidden"
-                        style={{ backgroundColor: colors.cream, color: colors.darkGreen }}
-                        variants={formVariants}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <motion.div 
-                            className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-10"
-                            style={{ backgroundColor: colors.gold }}
-                            animate={{ scale: [1, 1.5, 1], rotate: [0, 180, 360] }}
-                            transition={{ duration: 20, repeat: Infinity }}
-                        />
-                        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full transition-colors z-10" style={{ backgroundColor: colors.darkGreen, color: colors.white }}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                        <motion.h2 className="text-3xl font-bold mb-6 border-b pb-2" style={{ borderColor: colors.gold }} initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>Enrolment Form</motion.h2>
-                        <form onSubmit={handleSubmit} className="space-y-4 relative z-10">
-                            {['name', 'email', 'phone'].map((field, i) => (
-                                <motion.div key={field} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 + i * 0.1 }}>
-                                    <label htmlFor={field} className="block text-sm font-medium mb-1 capitalize">{field === 'phone' ? 'Phone Number' : `${field} Address`}</label>
-                                    <input type={field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'} id={field} required className="w-full p-3 rounded-lg border transition-all focus:ring-2 focus:outline-none" style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }} onFocus={(e) => { e.target.style.boxShadow = `0 0 0 2px ${colors.gold}`; }} onBlur={(e) => { e.target.style.boxShadow = `0 0 0 0px ${colors.gold}`; }} />
-                                </motion.div>
-                            ))}
-                            <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.6 }}>
-                                <label htmlFor="course" className="block text-sm font-medium mb-1">Interested Course</label>
-                                <select id="course" required className="w-full p-3 rounded-lg border appearance-none transition-all" style={{ borderColor: colors.gray, backgroundColor: colors.white, color: colors.darkGreen }}><option value="">Select a course</option><option value="data-science">Data Science</option><option value="web-dev">Full Stack Web Development</option><option value="cyber-sec">Cyber Security</option><option value="ai-ml">AI/ML</option></select>
-                            </motion.div>
-                            <motion.button type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full mt-6 py-4 rounded-full font-bold text-lg relative overflow-hidden" style={{ backgroundColor: colors.gold, color: colors.darkGreen, boxShadow: `0 10px 30px -10px ${colors.gold}` }}>
-                                <motion.span className="absolute inset-0 bg-white" initial={{ x: "-100%" }} whileHover={{ x: "100%" }} transition={{ duration: 0.6 }} />
-                                <span className="relative z-10">Submit & Enrol</span>
-                            </motion.button>
-                        </form>
-                    </motion.div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+        onClick={onClose} 
+      />
+
+      {/* Modal Container */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-5xl bg-transparent overflow-y-auto no-scrollbar"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button - Fixed to top right of viewport on mobile for easy reach */}
+        <button
+          onClick={onClose}
+          className="fixed top-4 right-4 sm:absolute sm:-top-2 sm:-right-2 p-3 sm:p-2 rounded-full z-[210] shadow-2xl transition-transform hover:scale-110"
+          style={{ backgroundColor: colors.gold, color: colors.darkGreen }}
+        >
+          ✕
+        </button>
+
+        <div className="w-full h-full pt-12 sm:pt-0">
+          <EnrollSection />
+        </div>
+      </motion.div>
+    </div>
+  );
 };

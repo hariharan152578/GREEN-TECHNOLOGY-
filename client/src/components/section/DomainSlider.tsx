@@ -9,6 +9,13 @@ import { usePageContext } from "../../context/usePageContext";
 /* -------------------- CONFIG -------------------- */
 const API_BASE_URL = "http://localhost:5000";
 
+/* ---------------- COLORS ---------------- */
+const COLORS = {
+  darkGreen: "#01311F",
+  gold: "#B99A49",
+  cream: "#F0ECE3",
+};
+
 /* -------------------- TYPES -------------------- */
 interface DomainSlide {
   id: number;
@@ -182,7 +189,7 @@ const DomainSection: React.FC = () => {
 
           <div className="flex items-center gap-8 mb-10">
             <span className="text-2xl font-bold text-[#01311F]">
-              ₹{currentSlide.price}
+              peoples: <span style={{ color: COLORS.gold }}>{currentSlide.price}</span> have choosen this Domain
             </span>
 
             <button

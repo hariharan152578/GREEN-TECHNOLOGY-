@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
 import HeroSection from "../../components/section/HeroSection";
-// import EnrollSection from "../../components/section/EnrollSection";
+import EnrollSection from "../../components/section/EnrollSection";
 import SuccessStoriesSection from "../../components/section/SuccessStoriesSection";
 import CareerImpactSection from "../../components/section/CareerImpactSection";
 import TechStackSection from "../../components/section/TechStackSection";
@@ -48,7 +48,7 @@ const Domain: React.FC = () => {
     <div className="min-h-screen bg-white">
       <main>
         <HeroSection />
-        {/* <EnrollSection /> */}
+        <EnrollSection />
         <SuccessStoriesSection />
         <CareerImpactSection />
         <CourseSection />

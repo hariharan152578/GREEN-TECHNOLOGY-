@@ -76,7 +76,7 @@ const YoutubeSection: React.FC = () => {
 
         {/* HEADER */}
         <h2 className="text-4xl font-bold text-center mb-14 text-white">
-          Student <span style={{ color: COLORS.gold }}>Stories</span>
+          Videos <span style={{ color: COLORS.gold }}>. Resourse</span>
         </h2>
 
         {/* CARDS */}

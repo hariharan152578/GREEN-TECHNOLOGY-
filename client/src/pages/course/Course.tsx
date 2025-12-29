@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
 import HeroSection from "../../components/section/HeroSection";
-// import EnrollSection from "../../components/section/EnrollSection";
+import EnrollSection from "../../components/section/EnrollSection";
 import SuccessStoriesSection from "../../components/section/SuccessStoriesSection";
 import CareerImpactSection from "../../components/section/CareerImpactSection";
 // import TrainerSection from "../../components/section/TrainerSection";
@@ -68,7 +68,7 @@ const Course: React.FC = () => {
       <main>
         {/* COURSE-SPECIFIC HERO */}
         <HeroSection />
-        {/* <EnrollSection /> */}
+        <EnrollSection />
         <SuccessStoriesSection />
         <CareerImpactSection />
         <TechStackSection />
