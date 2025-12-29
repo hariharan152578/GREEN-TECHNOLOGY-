@@ -7,6 +7,21 @@ import Footer from "../components/Footer";
 import FaqChatbotModal from "../components/FaqChatbotModal";
 import EnrollSection from "../components/section/EnrollSection";
 
+/* ---------------- TYPES ---------------- */
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  colors: typeof COLORS;
+}
+
+interface FloatingBtnProps {
+  children: React.ReactNode;
+  label: string;
+  color: string;
+  textColor: string;
+  onClick: () => void;
+}
+
 /* ---------------- COLORS ---------------- */
 const COLORS = {
   darkGreen: "#01311F",
