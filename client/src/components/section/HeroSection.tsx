@@ -18,10 +18,19 @@ interface HeroData {
   title: string;
   subtitle: string;
   description: string;
-  ctaText: string;
-  ctaLink: string;
   images: string[];
   runningTexts: RunningText[];
+}
+
+interface Domain {
+  id: number;
+  domain: string;
+}
+
+interface Course {
+  id: number;
+  domainId: number;
+  title: string;
 }
 
 /* ---------------- COLORS ---------------- */
@@ -30,73 +39,73 @@ const COLORS = {
   gold: "#B99A49",
   cream: "#F0ECE3",
   white: "#FFFFFF",
-  gray: "#CCCCCC",
 };
 
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
   const { domainId, courseId } = useParams();
 
-  const parsedDomainId = Number(domainId) || 0;
-  const parsedCourseId = Number(courseId) || 0;
+  /* 🔥 PAGE DETECTION (FIXED) */
+  const isLandingPage = !domainId;
+  const isDomainPage = !!domainId && !courseId;
+  const isCoursePage = !!domainId && !!courseId;
+
+  const parsedDomainId = domainId ? Number(domainId) : undefined;
+  const parsedCourseId = courseId ? Number(courseId) : undefined;
 
   const [heroData, setHeroData] = useState<HeroData | null>(null);
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  /* ---------------- FETCH HERO DATA ---------------- */
+  /* ---------------- FETCH HERO ---------------- */
   useEffect(() => {
-    let isMounted = true;
-
     const fetchHero = async () => {
-      try {
-        setLoading(true);
-
-        const res = await axios.get(`${API_BASE_URL}/api/hero`, {
-          params: {
-            domainId: parsedDomainId,
-            courseId: parsedCourseId,
-          },
-        });
-
-        if (isMounted) {
-          setHeroData(res.data);
-          setCurrent(0);
-        }
-      } catch (error) {
-        console.error("Failed to load hero data", error);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+      setLoading(true);
+      const res = await axios.get(`${API_BASE_URL}/api/hero`, {
+        params: {
+          domainId: parsedDomainId,
+          courseId: parsedCourseId,
+        },
+      });
+      setHeroData(res.data);
+      setLoading(false);
     };
-
     fetchHero();
-
-    return () => {
-      isMounted = false;
-    };
   }, [parsedDomainId, parsedCourseId]);
 
-  /* ---------------- SLIDER LOGIC ---------------- */
+  /* ---------------- FETCH DOMAINS ---------------- */
+  useEffect(() => {
+    if (!isLandingPage) return;
+    axios.get(`${API_BASE_URL}/api/domain`).then(res => setDomains(res.data));
+  }, [isLandingPage]);
+
+  /* ---------------- FETCH COURSES ---------------- */
+  useEffect(() => {
+    if (!isDomainPage || !parsedDomainId) return;
+    axios
+      .get(`${API_BASE_URL}/api/courses`, {
+        params: { domainId: parsedDomainId },
+      })
+      .then(res => setCourses(res.data));
+  }, [isDomainPage, parsedDomainId]);
+
+  /* ---------------- SLIDER ---------------- */
   const images = heroData?.images ?? [];
   const runningTexts = heroData?.runningTexts ?? [];
 
   useEffect(() => {
     if (!images.length) return;
-
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % images.length);
+      setCurrent(prev => (prev + 1) % images.length);
     }, 5000);
-
     return () => clearInterval(interval);
   }, [images.length]);
 
-  const prevSlide = () => {
-    setCurrent((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
-
-  const nextSlide = () => {
-    setCurrent((prev) => (prev + 1) % images.length);
+  /* ---------------- ENROLL HANDLER ---------------- */
+  const handleEnrollClick = () => {
+    window.dispatchEvent(new Event("open-enrolment"));
   };
 
   if (loading) return <LoadingPage />;
@@ -105,7 +114,8 @@ const HeroSection: React.FC = () => {
   /* ---------------- UI ---------------- */
   return (
     <div className="relative w-full flex flex-col font-sans">
-      {/* RUNNING TEXT (FROM BACKEND) */}
+
+      {/* RUNNING TEXT */}
       {runningTexts.length > 0 && (
         <div
           className="w-full py-2 overflow-hidden whitespace-nowrap"
@@ -119,7 +129,7 @@ const HeroSection: React.FC = () => {
             {runningTexts.map((item, index) => (
               <React.Fragment key={index}>
                 <span>{item.text}</span>
-                {index !== runningTexts.length - 1 && <span>•</span>}
+                <span>•</span>
               </React.Fragment>
             ))}
           </motion.div>
@@ -147,8 +157,10 @@ const HeroSection: React.FC = () => {
           </motion.div>
         </AnimatePresence>
 
+        {/* CONTENT */}
         <div className="relative z-10 h-full flex items-center px-6 md:px-20">
           <div className="w-full md:w-2/3">
+
             <motion.img
               src={logo}
               alt="Logo"
@@ -165,29 +177,51 @@ const HeroSection: React.FC = () => {
               {heroData.description}
             </p>
 
-            <button
-              onClick={() => navigate(heroData.ctaLink)}
-              className="px-8 py-3 rounded-full font-bold"
-              style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
-            >
-              {heroData.ctaText}
-            </button>
+            {/* 🔥 SMART CTA SECTION (FIXED) */}
+            <div className="flex flex-wrap gap-4">
+
+              {/* LANDING → DOMAINS */}
+              {isLandingPage &&
+                domains.map(d => (
+                  <button
+                    key={d.id}
+                    onClick={() => navigate(`/domain/${d.id}`)}
+                    className="px-6 py-3 rounded-full font-bold hover:scale-105 transition"
+                    style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
+                  >
+                    {d.domain}
+                  </button>
+                ))}
+
+              {/* DOMAIN → COURSES */}
+              {isDomainPage &&
+                courses.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() =>
+                      navigate(`/domain/${parsedDomainId}/course/${c.id}`)
+                    }
+                    className="px-6 py-3 rounded-full font-bold hover:scale-105 transition"
+                    style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
+                  >
+                    {c.title}
+                  </button>
+                ))}
+
+              {/* COURSE → ENROLL */}
+              {isCoursePage && (
+                <button
+                  onClick={handleEnrollClick}
+                  className="px-10 py-4 rounded-full font-bold text-lg hover:scale-105 transition"
+                  style={{ backgroundColor: COLORS.gold, color: COLORS.darkGreen }}
+                >
+                  Enroll Now
+                </button>
+              )}
+            </div>
+
           </div>
         </div>
-
-        {/* SLIDER CONTROLS */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-6 top-1/2 text-white text-4xl z-20"
-        >
-          ‹
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-6 top-1/2 text-white text-4xl z-20"
-        >
-          ›
-        </button>
       </div>
     </div>
   );
