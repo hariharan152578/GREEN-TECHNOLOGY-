@@ -67,6 +67,15 @@ export const MainLayout = () => {
     window.open("https://wa.me/8870295336", "_blank");
   };
 
+  /* BLOCK BODY SCROLL WHEN MODAL OPEN */
+  useEffect(() => {
+    if (isModalOpen || isChatbotOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [isModalOpen, isChatbotOpen]);
+
   useEffect(() => {
     const enrolListener = () => setIsModalOpen(true);
     window.addEventListener("open-enrolment", enrolListener);
@@ -79,6 +88,12 @@ export const MainLayout = () => {
 
   return (
     <>
+      {/* Global CSS for hiding scrollbars */}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
       <div className="sticky top-0 z-50">
         <Navbar />
       </div>
@@ -87,10 +102,10 @@ export const MainLayout = () => {
         <Outlet />
       </main>
 
-      {/* FLOATING STACK - RESPONSIVE POSITIONING */}
+      {/* FLOATING STACK */}
       <div className="fixed bottom-6 right-0 sm:bottom-10 sm:right-0 z-[60] flex flex-col items-end gap-3 sm:gap-4 pr-0 sm:pr-4">
         
-        {/* SIDE BAR ENQUIRY - Hidden on tiny screens, or made smaller */}
+        {/* SIDE BAR ENQUIRY */}
         <motion.div
           variants={infinityEnquiryVariants}
           initial="initial"
@@ -140,7 +155,7 @@ export const MainLayout = () => {
           style={{ backgroundColor: COLORS.white, color: COLORS.darkGreen }}
         >
           <span className={`inline-block transition-transform duration-300 ${isStackOpen ? 'rotate-180' : ''}`}>
-             ⬆
+              ⬆
           </span>
         </motion.button>
       </div>
@@ -158,14 +173,13 @@ export const MainLayout = () => {
   );
 };
 
-/* ---------------- FLOATING BUTTON - RESPONSIVE ---------------- */
+/* ---------------- FLOATING BUTTON ---------------- */
 
 const FloatingButton = ({ children, label, color, textColor, onClick }: FloatingBtnProps) => (
   <div className="flex items-center gap-2 cursor-pointer group" onClick={onClick}>
     <span className="hidden sm:block bg-white px-3 py-1 rounded-md text-xs font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
       {label}
     </span>
-    {/* Label for Mobile */}
     <span className="sm:hidden bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold shadow-sm">
       {label}
     </span>
@@ -178,18 +192,18 @@ const FloatingButton = ({ children, label, color, textColor, onClick }: Floating
   </div>
 );
 
-/* ---------------- ENROLLMENT MODAL - RESPONSIVE FIX ---------------- */
+/* ---------------- ENROLLMENT MODAL ---------------- */
 
 const EnrollmentModal: React.FC<ModalProps> = ({ isOpen, onClose, colors }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 overflow-hidden">
       {/* Backdrop */}
       <motion.div 
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+        className="absolute inset-0 bg-black/80 backdrop-blur-md" 
         onClick={onClose} 
       />
 
@@ -200,7 +214,7 @@ const EnrollmentModal: React.FC<ModalProps> = ({ isOpen, onClose, colors }) => {
         className="relative w-full h-full sm:h-auto sm:max-h-[95vh] sm:max-w-5xl bg-transparent overflow-y-auto no-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button - Fixed to top right of viewport on mobile for easy reach */}
+        {/* Close button */}
         <button
           onClick={onClose}
           className="fixed top-4 right-4 sm:absolute sm:-top-2 sm:-right-2 p-3 sm:p-2 rounded-full z-[210] shadow-2xl transition-transform hover:scale-110"

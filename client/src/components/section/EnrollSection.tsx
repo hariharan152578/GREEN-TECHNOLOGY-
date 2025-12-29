@@ -115,18 +115,18 @@ const EnrollSection: React.FC = () => {
             </header>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input placeholder="Full Name" value={formData.name} onChange={v => setFormData({...formData, name: v})} />
+              <Input placeholder="Full Name" value={formData.name} onChange={(v: string) => setFormData({...formData, name: v})} />
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input placeholder="Email" type="email" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
-                <Input placeholder="Phone" type="tel" value={formData.phone} onChange={v => setFormData({...formData, phone: v})} />
+                <Input placeholder="Email" type="email" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} />
+                <Input placeholder="Phone" type="tel" value={formData.phone} onChange={(v: string) => setFormData({...formData, phone: v})} />
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Select value={selectedDomainId} options={domains.map(d => ({ label: d.domain, value: d.id }))} 
-                  onChange={v => { setSelectedDomainId(Number(v)); setSelectedCourseId(0); }} label="Domain" />
+                  onChange={(v: string) => { setSelectedDomainId(Number(v)); setSelectedCourseId(0); }} label="Domain" />
                 <Select value={selectedCourseId} options={courses.map(c => ({ label: c.title, value: c.id }))} 
-                  onChange={v => setSelectedCourseId(Number(v))} disabled={!courses.length} label="Course" />
+                  onChange={(v: string) => setSelectedCourseId(Number(v))} disabled={!courses.length} label="Course" />
               </div>
 
               <div className="pt-2">
@@ -164,32 +164,42 @@ const EnrollSection: React.FC = () => {
 
 /* ---------------- HELPERS ---------------- */
 
-const Input = ({ ...props }: any) => (
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  onChange: (value: string) => void;
+}
+
+const Input = ({ onChange, ...props }: InputProps) => (
   <input 
     {...props} 
-    onChange={e => props.onChange(e.target.value)} 
+    onChange={e => onChange(e.target.value)} 
     className="w-full px-5 py-3.5 rounded-xl bg-[#F0ECE3] text-[#01311F] text-sm font-medium outline-none border-2 border-transparent focus:border-[#B99A49] transition-all placeholder:text-gray-400" 
   />
 );
 
-const Select = ({ options, label, ...props }: any) => (
+interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
+  options: Array<{ label: string; value: number }>;
+  label: string;
+  onChange: (value: string) => void;
+}
+
+const Select = ({ options, label, onChange, ...props }: SelectProps) => (
   <select 
     {...props} 
-    onChange={e => props.onChange(e.target.value)} 
+    onChange={e => onChange(e.target.value)} 
     className="w-full px-4 py-3.5 rounded-xl bg-[#F0ECE3] text-[#01311F] text-sm font-medium outline-none cursor-pointer disabled:opacity-50"
   >
     <option value="">{label}</option>
-    {options.map((opt: any) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+    {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
   </select>
 );
 
 const AnimatedStackCard: React.FC<{ card: EnrollCard; position: number; }> = ({ card, position }) => {
-  const variants = {
+  const variants: Record<number, { x: number; y: number; scale: number; zIndex: number; opacity: number; rotate: number }> = {
     0: { x: 0, y: 0, scale: 1, zIndex: 30, opacity: 1, rotate: 0 },
     1: { x: 30, y: -20, scale: 0.94, zIndex: 20, opacity: 0.8, rotate: 2 },
     2: { x: 60, y: -40, scale: 0.88, zIndex: 10, opacity: 0.4, rotate: 4 },
   };
-  const currentStyle = (variants as any)[position] || { x: 100, opacity: 0, scale: 0.8 };
+  const currentStyle = variants[position] || { x: 100, opacity: 0, scale: 0.8 };
 
   return (
     <motion.div

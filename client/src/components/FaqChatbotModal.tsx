@@ -3,10 +3,17 @@ import { motion } from "framer-motion";
 import axios from "axios";
 
 /* ---------------- TYPES ---------------- */
+interface ColorScheme {
+  cream: string;
+  darkGreen: string;
+  gold: string;
+  white: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  colors: any;
+  colors: ColorScheme;
 }
 
 interface Message {

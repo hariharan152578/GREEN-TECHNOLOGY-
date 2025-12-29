@@ -145,16 +145,17 @@ const DomainSection: React.FC = () => {
             {/* Pagination */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
               {domainSlides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    index === currentIndex
-                      ? "bg-white w-8"
-                      : "bg-white/50 w-2"
-                  }`}
-                />
-              ))}
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    title={`Go to slide ${index + 1}`}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentIndex
+                        ? "bg-white w-8"
+                        : "bg-white/50 w-2"
+                    }`}
+                  />
+                ))}
             </div>
           </div>
 
@@ -202,10 +203,10 @@ const DomainSection: React.FC = () => {
 
           {/* NAV */}
           <div className="flex space-x-4">
-            <button onClick={prevSlide}>
+            <button onClick={prevSlide} title="Previous slide">
               <ChevronLeft />
             </button>
-            <button onClick={nextSlide}>
+            <button onClick={nextSlide} title="Next slide">
               <ChevronRight />
             </button>
           </div>
