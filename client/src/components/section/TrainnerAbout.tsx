@@ -1,11 +1,11 @@
 /* eslint-disable no-irregular-whitespace */
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
+import { safeGet } from "../../util/safeGet";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- TYPES ---------------- */
 interface TrainerAboutData {
@@ -28,38 +28,57 @@ const TrainnerAbout: React.FC = () => {
   const SLIDESHOW_INTERVAL = 4000;
   const TRANSITION_DURATION = 0.8;
 
-  /* ---------------- FETCH DATA ---------------- */
+  /* ---------------- FETCH TRAINER ABOUT (SAFE) ---------------- */
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
     const fetchTrainerAbout = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/trainer-about`, {
-          params: {
-            domainId: domainId ?? 0,
-            courseId: courseId ?? 0,
-          },
-        });
-
-        if (isMounted) {
-          setData(res.data);
-          setCurrentMainImageIndex(0);
-          setCurrentSmallImageIndex(0);
+      let result = await safeGet<TrainerAboutData>(
+        `${API_BASE_URL}/api/trainer-about`,
+        {
+          domainId: domainId ?? undefined,
+          courseId: courseId ?? undefined,
         }
-      } catch (error) {
-        console.error("Failed to load trainer about", error);
+      );
+
+      if (!result) {
+        result = await safeGet<TrainerAboutData>(
+          `${API_BASE_URL}/api/trainer-about`,
+          { domainId: 0, courseId: 0 }
+        );
+      }
+
+      if (mounted && result) {
+        setData({
+          ...result,
+          mainImages: Array.isArray(result.mainImages)
+            ? result.mainImages
+            : [],
+          smallImages: Array.isArray(result.smallImages)
+            ? result.smallImages
+            : [],
+        });
+        setCurrentMainImageIndex(0);
+        setCurrentSmallImageIndex(0);
       }
     };
 
     fetchTrainerAbout();
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [domainId, courseId]);
 
+  /* ---------------- SAFE FLAGS ---------------- */
+  const hasMainImages =
+    Array.isArray(data?.mainImages) && data.mainImages.length > 0;
+
+  const hasSmallImages =
+    Array.isArray(data?.smallImages) && data.smallImages.length > 0;
+
   /* ---------------- SLIDESHOW EFFECTS ---------------- */
   useEffect(() => {
-    if (!data?.mainImages?.length) return;
+    if (!hasMainImages || !data) return;
 
     const interval = setInterval(() => {
       setCurrentMainImageIndex(
@@ -68,10 +87,10 @@ const TrainnerAbout: React.FC = () => {
     }, SLIDESHOW_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [data?.mainImages?.length]);
+  }, [hasMainImages, data?.mainImages.length]);
 
   useEffect(() => {
-    if (!data?.smallImages?.length) return;
+    if (!hasSmallImages || !data) return;
 
     const interval = setInterval(() => {
       setCurrentSmallImageIndex(
@@ -80,8 +99,9 @@ const TrainnerAbout: React.FC = () => {
     }, SLIDESHOW_INTERVAL + 1000);
 
     return () => clearInterval(interval);
-  }, [data?.smallImages?.length]);
+  }, [hasSmallImages, data?.smallImages.length]);
 
+  /* ---------------- GUARD ---------------- */
   if (!data) return null;
 
   const {
@@ -109,14 +129,32 @@ const TrainnerAbout: React.FC = () => {
 
   const imageVariants: Variants = {
     initial: { opacity: 0, scale: 1.1 },
-    animate: { opacity: 1, scale: 1, transition: { duration: TRANSITION_DURATION } },
-    exit: { opacity: 0, scale: 0.9, transition: { duration: TRANSITION_DURATION } },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: TRANSITION_DURATION },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.9,
+      transition: { duration: TRANSITION_DURATION },
+    },
   };
 
   const smallImageVariants: Variants = {
     initial: { opacity: 0, scale: 0.95, rotate: -5 },
-    animate: { opacity: 1, scale: 1, rotate: 0, transition: { duration: TRANSITION_DURATION } },
-    exit: { opacity: 0, scale: 0.9, rotate: 5, transition: { duration: TRANSITION_DURATION } },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      rotate: 0,
+      transition: { duration: TRANSITION_DURATION },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.9,
+      rotate: 5,
+      transition: { duration: TRANSITION_DURATION },
+    },
     hover: { scale: 1.05, rotate: 2, transition: { duration: 0.3 } },
   };
 
@@ -161,8 +199,8 @@ const TrainnerAbout: React.FC = () => {
             variants={imageContainerVariants}
             className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative"
           >
-            <AnimatePresence mode="wait">
-              {mainImages.length > 0 && (
+            {hasMainImages ? (
+              <AnimatePresence mode="wait">
                 <motion.img
                   key={currentMainImageIndex}
                   src={`${API_BASE_URL}${mainImages[currentMainImageIndex]}`}
@@ -172,12 +210,16 @@ const TrainnerAbout: React.FC = () => {
                   animate="animate"
                   exit="exit"
                 />
-              )}
-            </AnimatePresence>
+              </AnimatePresence>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                Image coming soon
+              </div>
+            )}
           </motion.div>
 
           {/* SMALL IMAGE */}
-          {smallImages.length > 0 && (
+          {hasSmallImages && (
             <motion.div
               variants={smallImageVariants}
               whileHover="hover"

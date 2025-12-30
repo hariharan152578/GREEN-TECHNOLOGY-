@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 
+import { safeGet } from "../../util/safeGet";
 import LoadingPage from "../LoadingPage";
 import logo from "../../assets/Greens.png";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- TYPES ---------------- */
 interface RunningText {
@@ -45,7 +45,7 @@ const HeroSection: React.FC = () => {
   const navigate = useNavigate();
   const { domainId, courseId } = useParams();
 
-  /* 🔥 PAGE DETECTION (FIXED) */
+  /* ---------------- PAGE TYPE ---------------- */
   const isLandingPage = !domainId;
   const isDomainPage = !!domainId && !courseId;
   const isCoursePage = !!domainId && !!courseId;
@@ -53,42 +53,65 @@ const HeroSection: React.FC = () => {
   const parsedDomainId = domainId ? Number(domainId) : undefined;
   const parsedCourseId = courseId ? Number(courseId) : undefined;
 
+  /* ---------------- STATE ---------------- */
   const [heroData, setHeroData] = useState<HeroData | null>(null);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  /* ---------------- FETCH HERO ---------------- */
+  /* ---------------- FETCH HERO (SAFE) ---------------- */
   useEffect(() => {
+    let mounted = true;
+
     const fetchHero = async () => {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/api/hero`, {
-        params: {
+
+      // 1️⃣ Try requested hero
+      let data = await safeGet<HeroData>(
+        `${API_BASE_URL}/api/hero`,
+        {
           domainId: parsedDomainId,
           courseId: parsedCourseId,
-        },
-      });
-      setHeroData(res.data);
-      setLoading(false);
+        }
+      );
+
+      // 2️⃣ Fallback → landing hero
+      if (!data) {
+        data = await safeGet<HeroData>(
+          `${API_BASE_URL}/api/hero`,
+          { domainId: 0, courseId: 0 }
+        );
+      }
+
+      if (mounted) {
+        setHeroData(data);
+        setLoading(false);
+      }
     };
+
     fetchHero();
+    return () => {
+      mounted = false;
+    };
   }, [parsedDomainId, parsedCourseId]);
 
-  /* ---------------- FETCH DOMAINS ---------------- */
+  /* ---------------- FETCH DOMAINS (LANDING) ---------------- */
   useEffect(() => {
     if (!isLandingPage) return;
-    axios.get(`${API_BASE_URL}/api/domain`).then(res => setDomains(res.data));
+
+    safeGet<Domain[]>(`${API_BASE_URL}/api/domain`)
+      .then(data => setDomains(data ?? []));
   }, [isLandingPage]);
 
-  /* ---------------- FETCH COURSES ---------------- */
+  /* ---------------- FETCH COURSES (DOMAIN) ---------------- */
   useEffect(() => {
     if (!isDomainPage || !parsedDomainId) return;
-    axios
-      .get(`${API_BASE_URL}/api/courses`, {
-        params: { domainId: parsedDomainId },
-      })
-      .then(res => setCourses(res.data));
+
+    safeGet<Course[]>(
+      `${API_BASE_URL}/api/courses`,
+      { domainId: parsedDomainId }
+    ).then(data => setCourses(data ?? []));
   }, [isDomainPage, parsedDomainId]);
 
   /* ---------------- SLIDER ---------------- */
@@ -97,9 +120,11 @@ const HeroSection: React.FC = () => {
 
   useEffect(() => {
     if (!images.length) return;
+
     const interval = setInterval(() => {
       setCurrent(prev => (prev + 1) % images.length);
     }, 5000);
+
     return () => clearInterval(interval);
   }, [images.length]);
 
@@ -108,8 +133,16 @@ const HeroSection: React.FC = () => {
     window.dispatchEvent(new Event("open-enrolment"));
   };
 
+  /* ---------------- GUARDS ---------------- */
   if (loading) return <LoadingPage />;
-  if (!heroData || !images.length) return null;
+
+  if (!heroData || !images.length) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center text-gray-400">
+        Hero content unavailable
+      </div>
+    );
+  }
 
   /* ---------------- UI ---------------- */
   return (
@@ -177,7 +210,7 @@ const HeroSection: React.FC = () => {
               {heroData.description}
             </p>
 
-            {/* 🔥 SMART CTA SECTION (FIXED) */}
+            {/* SMART CTA */}
             <div className="flex flex-wrap gap-4">
 
               {/* LANDING → DOMAINS */}
@@ -218,8 +251,8 @@ const HeroSection: React.FC = () => {
                   Enroll Now
                 </button>
               )}
-            </div>
 
+            </div>
           </div>
         </div>
       </div>

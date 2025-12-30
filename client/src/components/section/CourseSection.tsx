@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- COLORS ---------------- */
 const darkGreen = "#01311F";

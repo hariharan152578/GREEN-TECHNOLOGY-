@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { usePageContext } from "../../context/usePageContext";
 
 /* -------------------- CONFIG -------------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- COLORS ---------------- */
 const COLORS = {
@@ -40,21 +40,34 @@ const DomainSection: React.FC = () => {
 
   const TRANSITION_DURATION = 0.8;
 
-  /* ---------------- FETCH DOMAINS ---------------- */
+  /* ---------------- FETCH DOMAINS (SAFE) ---------------- */
   useEffect(() => {
     const fetchDomains = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/domain`);
-        setDomainSlides(res.data);
+
+        // ✅ HARD SAFETY NORMALIZATION
+        const slides = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+        setDomainSlides(slides);
+        setCurrentIndex(0);
       } catch (error) {
         console.error("Failed to load domains", error);
+        setDomainSlides([]); // fail-safe
       }
     };
 
     fetchDomains();
   }, []);
 
-  if (!domainSlides.length) return null;
+  /* ---------------- GUARD ---------------- */
+  if (!Array.isArray(domainSlides) || domainSlides.length === 0) {
+    return null;
+  }
 
   const currentSlide = domainSlides[currentIndex];
 
@@ -145,17 +158,16 @@ const DomainSection: React.FC = () => {
             {/* Pagination */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
               {domainSlides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    title={`Go to slide ${index + 1}`}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? "bg-white w-8"
-                        : "bg-white/50 w-2"
-                    }`}
-                  />
-                ))}
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex
+                      ? "bg-white w-8"
+                      : "bg-white/50 w-2"
+                  }`}
+                />
+              ))}
             </div>
           </div>
 
@@ -190,7 +202,11 @@ const DomainSection: React.FC = () => {
 
           <div className="flex items-center gap-8 mb-10">
             <span className="text-2xl font-bold text-[#01311F]">
-              peoples: <span style={{ color: COLORS.gold }}>{currentSlide.price}</span> have choosen this Domain
+              peoples:{" "}
+              <span style={{ color: COLORS.gold }}>
+                {currentSlide.price}
+              </span>{" "}
+              have chosen this Domain
             </span>
 
             <button
@@ -203,10 +219,10 @@ const DomainSection: React.FC = () => {
 
           {/* NAV */}
           <div className="flex space-x-4">
-            <button onClick={prevSlide} title="Previous slide">
+            <button onClick={prevSlide}>
               <ChevronLeft />
             </button>
-            <button onClick={nextSlide} title="Next slide">
+            <button onClick={nextSlide}>
               <ChevronRight />
             </button>
           </div>

@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
+import { safeGet } from "../../util/safeGet";
+
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- COLORS ---------------- */
 const COLORS = {
@@ -28,37 +31,40 @@ const CareerImpactSection: React.FC = () => {
   const { domainId, courseId } = usePageContext();
   const [data, setData] = useState<CareerImpactData | null>(null);
 
-  /* ---------------- FETCH DATA ---------------- */
+  /* ---------------- FETCH CAREER IMPACT (SAFE) ---------------- */
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
     const fetchCareerImpact = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/api/career-impact",
-          {
-            params: {
-              domainId: domainId ?? 0,
-              courseId: courseId ?? 0,
-            },
-          }
-        );
-
-        if (isMounted) {
-          setData(res.data);
+      // 1️⃣ Try domain + course
+      let result = await safeGet<CareerImpactData>(
+        `${API_BASE_URL}/api/career-impact`,
+        {
+          domainId: domainId ?? undefined,
+          courseId: courseId ?? undefined,
         }
-      } catch (error) {
-        console.error("Failed to load Career Impact section", error);
+      );
+
+      // 2️⃣ Fallback → landing
+      if (!result) {
+        result = await safeGet<CareerImpactData>(
+          `${API_BASE_URL}/api/career-impact`,
+          { domainId: 0, courseId: 0 }
+        );
+      }
+
+      if (mounted) {
+        setData(result);
       }
     };
 
     fetchCareerImpact();
-
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [domainId, courseId]);
 
+  /* ---------------- GUARD ---------------- */
   if (!data) return null;
 
   /* ---------------- UI ---------------- */
@@ -68,7 +74,7 @@ const CareerImpactSection: React.FC = () => {
       style={{ backgroundColor: COLORS.white }}
     >
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-12 h-full">
-        
+
         {/* === LEFT COLUMN: MAIN CAREER CARD === */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -110,7 +116,7 @@ const CareerImpactSection: React.FC = () => {
 
         {/* === RIGHT COLUMN === */}
         <div className="w-full lg:w-1/2 flex flex-col gap-6 md:gap-8">
-          
+
           {/* CARD 1 */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}

@@ -22,8 +22,8 @@ interface ModuleTopic {
 interface Module {
   id: number;
   title: string;
-  description: string;
-  topics: ModuleTopic[];
+  description?: string;
+  topics?: ModuleTopic[];
 }
 
 /* ---------------- COMPONENT ---------------- */
@@ -34,22 +34,37 @@ const ModulesSection: React.FC = () => {
   const [activeModule, setActiveModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const API_BASE_URL = import.meta.env.API_BASE_URL;
   /* ---------------- FETCH MODULES ---------------- */
   useEffect(() => {
     const fetchModules = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:5000/api/modules", {
+
+        const res = await axios.get(`${API_BASE_URL}/api/modules`, {
           params: {
             domainId: domainId ?? 0,
             courseId: courseId ?? 0,
           },
         });
 
-        setModules(res.data);
-        setActiveModule(res.data[0] || null);
+        const fetchedModules: Module[] = res.data || [];
+
+        setModules(fetchedModules);
+
+        // ✅ Keep previously selected module if exists
+        setActiveModule((prev) => {
+          if (!prev) return fetchedModules[0] || null;
+          return (
+            fetchedModules.find((m) => m.id === prev.id) ||
+            fetchedModules[0] ||
+            null
+          );
+        });
       } catch (error) {
         console.error("Failed to load modules", error);
+        setModules([]);
+        setActiveModule(null);
       } finally {
         setLoading(false);
       }
@@ -58,7 +73,8 @@ const ModulesSection: React.FC = () => {
     fetchModules();
   }, [domainId, courseId]);
 
-  if (loading || !activeModule) return null;
+  if (loading) return null;
+  if (!activeModule) return null;
 
   return (
     <section
@@ -101,37 +117,38 @@ const ModulesSection: React.FC = () => {
               Modules
             </h3>
 
-            {modules.map((mod, index) => (
-              <button
-                key={mod.id}
-                onClick={() => setActiveModule(mod)}
-                className={`flex-shrink-0 snap-start text-left px-4 py-3 md:px-6 md:py-4 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-between items-center whitespace-nowrap lg:whitespace-normal ${
-                  activeModule.id === mod.id
-                    ? "scale-95 lg:scale-105 ring-2 ring-offset-2 ring-[#01311F]"
-                    : "hover:bg-white/50"
-                }`}
-                style={{
-                  backgroundColor:
-                    activeModule.id === mod.id
+            {modules.map((mod, index) => {
+              const isActive = activeModule.id === mod.id;
+
+              return (
+                <button
+                  key={mod.id}
+                  onClick={() => setActiveModule(mod)}
+                  className={`flex-shrink-0 snap-start text-left px-4 py-3 md:px-6 md:py-4 rounded-xl font-semibold transition-all duration-300 shadow-sm flex justify-between items-center whitespace-nowrap lg:whitespace-normal ${
+                    isActive
+                      ? "scale-95 lg:scale-105 ring-2 ring-offset-2 ring-[#01311F]"
+                      : "hover:bg-white/50"
+                  }`}
+                  style={{
+                    backgroundColor: isActive
                       ? COLORS.darkGreen
                       : COLORS.white,
-                  color:
-                    activeModule.id === mod.id
-                      ? COLORS.gold
-                      : COLORS.darkGreen,
-                }}
-              >
-                <span className="text-sm md:text-base">
-                  Module {index + 1}: {mod.title}
-                </span>
-                {activeModule.id === mod.id && (
-                  <motion.span
-                    layoutId="activeDot"
-                    className="hidden lg:block w-2 h-2 rounded-full bg-[#B99A49]"
-                  />
-                )}
-              </button>
-            ))}
+                    color: isActive ? COLORS.gold : COLORS.darkGreen,
+                  }}
+                >
+                  <span className="text-sm md:text-base">
+                    Module {index + 1}: {mod.title}
+                  </span>
+
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeDot"
+                      className="hidden lg:block w-2 h-2 rounded-full bg-[#B99A49]"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* ===== RIGHT: MODULE DETAILS ===== */}
@@ -159,39 +176,49 @@ const ModulesSection: React.FC = () => {
                   {activeModule.title}
                 </h3>
 
-                <p
-                  className="text-base md:text-xl leading-relaxed mb-6 md:mb-8 opacity-90"
-                  style={{ color: COLORS.cream }}
-                >
-                  {activeModule.description}
-                </p>
+                {activeModule.description && (
+                  <p
+                    className="text-base md:text-xl leading-relaxed mb-6 md:mb-8 opacity-90"
+                    style={{ color: COLORS.cream }}
+                  >
+                    {activeModule.description}
+                  </p>
+                )}
 
+                {/* ===== TOPICS ===== */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  {activeModule.topics.map((topic) => (
-                    <div
-                      key={topic.id}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-                    >
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke={COLORS.gold}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                  {activeModule.topics && activeModule.topics.length > 0 ? (
+                    activeModule.topics.map((topic) => (
+                      <div
+                        key={topic.id}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                       >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <span
-                        className="text-sm md:text-md font-medium"
-                        style={{ color: COLORS.cream }}
-                      >
-                        {topic.title}
-                      </span>
-                    </div>
-                  ))}
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke={COLORS.gold}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+
+                        <span
+                          className="text-sm md:text-md font-medium"
+                          style={{ color: COLORS.cream }}
+                        >
+                          {topic.title}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-white/60 text-sm col-span-full">
+                      No topics available for this module.
+                    </p>
+                  )}
                 </div>
               </motion.div>
             </AnimatePresence>

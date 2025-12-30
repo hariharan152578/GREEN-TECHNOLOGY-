@@ -11,7 +11,7 @@ import {
   FiFolder,
 } from "react-icons/fi";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------- TYPES ---------- */
 interface Material {
@@ -47,7 +47,7 @@ const MaterialDownloadSection: React.FC = () => {
 
   const ITEMS_PER_PAGE = 3;
 
-  /* ---------- FETCH ---------- */
+  /* ---------- FETCH (SAFE) ---------- */
   useEffect(() => {
     axios
       .get(`${API_BASE_URL}/api/materials`, {
@@ -57,15 +57,24 @@ const MaterialDownloadSection: React.FC = () => {
         },
       })
       .then((res) => {
-        setMaterials(res.data);
+        // ✅ HARD NORMALIZATION
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+        setMaterials(list);
         setIndex(0);
       })
       .catch((err) => {
         console.error("Failed to load materials", err);
+        setMaterials([]); // fail-safe
       });
   }, [domainId, courseId]);
 
-  if (!materials.length) return null;
+  /* ---------- GUARD ---------- */
+  if (!Array.isArray(materials) || materials.length === 0) return null;
 
   const maxIndex = Math.max(materials.length - ITEMS_PER_PAGE, 0);
   const visible = materials.slice(index, index + ITEMS_PER_PAGE);

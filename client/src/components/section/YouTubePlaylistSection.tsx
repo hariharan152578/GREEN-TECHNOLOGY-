@@ -10,6 +10,8 @@ const COLORS = {
   cream: "#F0ECE3",
 };
 
+const API_BASE_URL = import.meta.env.API_BASE_URL;
+
 /* ---------------- TYPES ---------------- */
 interface VideoItem {
   id: number;
@@ -43,14 +45,27 @@ const YoutubeSection: React.FC = () => {
 
   const ITEMS_PER_PAGE = 3;
 
-  /* ---------------- FETCH ---------------- */
+  /* ---------------- FETCH (SAFE) ---------------- */
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/videos", {
+      .get(`${API_BASE_URL}/api/videos`, {
         params: { domainId: domainId ?? 0, courseId: courseId ?? 0 },
       })
-      .then((res) => setVideos(res.data))
-      .catch(console.error);
+      .then((res) => {
+        // ✅ HARD NORMALIZATION
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+        setVideos(list);
+        setCurrent(0);
+      })
+      .catch((err) => {
+        console.error("Failed to load videos", err);
+        setVideos([]); // fail-safe
+      });
   }, [domainId, courseId]);
 
   /* ---------------- ESC CLOSE ---------------- */
@@ -62,7 +77,8 @@ const YoutubeSection: React.FC = () => {
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
 
-  if (!videos.length) return null;
+  /* ---------------- GUARD ---------------- */
+  if (!Array.isArray(videos) || videos.length === 0) return null;
 
   const totalPages = Math.ceil(videos.length / ITEMS_PER_PAGE);
   const visible = videos.slice(
@@ -73,10 +89,9 @@ const YoutubeSection: React.FC = () => {
   return (
     <section className="py-24 px-6" style={{ background: COLORS.darkGreen }}>
       <div className="max-w-7xl mx-auto relative">
-
         {/* HEADER */}
         <h2 className="text-4xl font-bold text-center mb-14 text-white">
-          Videos <span style={{ color: COLORS.gold }}>. Resourse</span>
+          Videos <span style={{ color: COLORS.gold }}>. Resource</span>
         </h2>
 
         {/* CARDS */}
@@ -89,7 +104,7 @@ const YoutubeSection: React.FC = () => {
               className="cursor-pointer rounded-2xl overflow-hidden shadow-2xl bg-black"
             >
               <img
-                src={`http://localhost:5000${v.imageUrl}`}
+                src={`${API_BASE_URL}${v.imageUrl}`}
                 alt={v.name}
                 className="w-full h-[350px] object-cover"
               />

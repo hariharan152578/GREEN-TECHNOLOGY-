@@ -7,7 +7,7 @@ import { usePageContext } from "../../context/usePageContext";
 import noImage from "../../assets/no-image.png";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- COLORS ---------------- */
 const COLORS = {
@@ -21,7 +21,7 @@ interface Testimonial {
   id: number;
   name: string;
   batch: string;
-  image: string; // "uploads/testimonials/xxx.jpg"
+  image: string;
   quote: string;
   videoUrl: string;
 }
@@ -58,6 +58,7 @@ const carouselVariants = (direction: number): Variants => ({
   },
 });
 
+/* ---------------- COMPONENT ---------------- */
 const TestimonialsSection: React.FC = () => {
   const { domainId } = usePageContext();
 
@@ -67,21 +68,29 @@ const TestimonialsSection: React.FC = () => {
   const [visibleCards, setVisibleCards] = useState(3);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const selectedTestimonial = testimonials.find(t => t.id === selectedId);
-
-  /* ---------- FETCH ---------- */
+  /* ---------- FETCH (SAFE) ---------- */
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/testimonials`, {
           params: { domainId: domainId ?? 0 },
         });
-        setTestimonials(res.data);
+
+        // ✅ NORMALIZE RESPONSE
+        const list: Testimonial[] = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+        setTestimonials(list);
         setPage(0);
       } catch (err) {
         console.error("Failed to load testimonials", err);
+        setTestimonials([]);
       }
     };
+
     fetchTestimonials();
   }, [domainId]);
 
@@ -97,7 +106,10 @@ const TestimonialsSection: React.FC = () => {
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  if (!testimonials.length) return null;
+  /* ---------- GUARDS ---------- */
+  if (!Array.isArray(testimonials) || testimonials.length === 0) return null;
+
+  const selectedTestimonial = testimonials.find(t => t.id === selectedId);
 
   const totalPages = Math.ceil(testimonials.length / visibleCards);
 
@@ -125,7 +137,10 @@ const TestimonialsSection: React.FC = () => {
 
   /* ---------------- UI ---------------- */
   return (
-    <section className="w-full py-24 px-6 md:px-10" style={{ backgroundColor: COLORS.darkGreen }}>
+    <section
+      className="w-full py-24 px-6 md:px-10"
+      style={{ backgroundColor: COLORS.darkGreen }}
+    >
       <div className="max-w-7xl mx-auto">
 
         <h2 className="text-4xl sm:text-5xl font-light text-center mb-16" style={{ color: COLORS.cream }}>
@@ -169,15 +184,14 @@ const TestimonialsSection: React.FC = () => {
                     className="relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer shadow-xl"
                   >
                     <img
-                    src={`${API_BASE_URL}${t.image}`}
-                    alt={t.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = noImage;
-                    }}
+                      src={`${API_BASE_URL}${t.image}`}
+                      alt={t.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = noImage;
+                      }}
                     />
-
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute bottom-0 p-4">

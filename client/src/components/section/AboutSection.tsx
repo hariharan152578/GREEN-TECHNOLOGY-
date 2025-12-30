@@ -1,11 +1,11 @@
 /* eslint-disable no-irregular-whitespace */
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
+import { safeGet } from "../../util/safeGet";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 
 /* ---------------- TYPES ---------------- */
 interface AboutData {
@@ -28,61 +28,85 @@ const AboutSection: React.FC = () => {
   const SLIDESHOW_INTERVAL = 4000;
   const TRANSITION_DURATION = 0.8;
 
-  /* ---------------- FETCH ABOUT DATA ---------------- */
+  /* ---------------- FETCH ABOUT (SAFE) ---------------- */
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
     const fetchAbout = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/about`, {
-          params: {
-            domainId: domainId ?? 0,
-            courseId: courseId ?? 0,
-          },
-        });
-
-        if (isMounted) {
-          setAboutData(res.data);
-          setCurrentMainImageIndex(0);
-          setCurrentSmallImageIndex(0);
+      let data = await safeGet<AboutData>(
+        `${API_BASE_URL}/api/about`,
+        {
+          domainId: domainId ?? undefined,
+          courseId: courseId ?? undefined,
         }
-      } catch (error) {
-        console.error("Failed to load about section", error);
+      );
+
+      if (!data) {
+        data = await safeGet<AboutData>(
+          `${API_BASE_URL}/api/about`,
+          { domainId: 0, courseId: 0 }
+        );
+      }
+
+      if (mounted && data) {
+        setAboutData({
+          ...data,
+          mainImages: Array.isArray(data.mainImages) ? data.mainImages : [],
+          smallImages: Array.isArray(data.smallImages) ? data.smallImages : [],
+        });
+        setCurrentMainImageIndex(0);
+        setCurrentSmallImageIndex(0);
       }
     };
 
     fetchAbout();
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [domainId, courseId]);
 
+  /* ---------------- SAFE IMAGE FLAGS ---------------- */
+  const hasMainImages =
+    Array.isArray(aboutData?.mainImages) &&
+    aboutData.mainImages.length > 0;
+
+  const hasSmallImages =
+    Array.isArray(aboutData?.smallImages) &&
+    aboutData.smallImages.length > 0;
+
   /* ---------------- SLIDESHOW EFFECTS ---------------- */
   useEffect(() => {
-    if (!aboutData?.mainImages?.length) return;
+    if (!hasMainImages || !aboutData) return;
 
     const interval = setInterval(() => {
       setCurrentMainImageIndex(
-        (prev) => (prev + 1) % aboutData.mainImages.length
+        prev => (prev + 1) % aboutData.mainImages.length
       );
     }, SLIDESHOW_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [aboutData?.mainImages?.length]);
+  }, [hasMainImages, aboutData?.mainImages.length]);
 
   useEffect(() => {
-    if (!aboutData?.smallImages?.length) return;
+    if (!hasSmallImages || !aboutData) return;
 
     const interval = setInterval(() => {
       setCurrentSmallImageIndex(
-        (prev) => (prev + 1) % aboutData.smallImages.length
+        prev => (prev + 1) % aboutData.smallImages.length
       );
     }, SLIDESHOW_INTERVAL + 1000);
 
     return () => clearInterval(interval);
-  }, [aboutData?.smallImages?.length]);
+  }, [hasSmallImages, aboutData?.smallImages.length]);
 
-  if (!aboutData) return null;
+  /* ---------------- GUARD ---------------- */
+  if (!aboutData) {
+    return (
+      <div className="py-20 text-center text-gray-400">
+        About section coming soon
+      </div>
+    );
+  }
 
   const {
     label,
@@ -136,32 +160,40 @@ const AboutSection: React.FC = () => {
         {/* LEFT - IMAGES */}
         <div className="relative">
           <div className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentMainImageIndex}
-                src={`${API_BASE_URL}${mainImages[currentMainImageIndex]}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                variants={imageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              />
-            </AnimatePresence>
+            {hasMainImages ? (
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentMainImageIndex}
+                  src={`${API_BASE_URL}${mainImages[currentMainImageIndex]}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  variants={imageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                />
+              </AnimatePresence>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                Image coming soon
+              </div>
+            )}
           </div>
 
-          <div className="absolute bottom-[-40px] right-[-40px] hidden md:block w-[200px] h-[150px] rounded-xl overflow-hidden shadow-lg">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentSmallImageIndex}
-                src={`${API_BASE_URL}${smallImages[currentSmallImageIndex]}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                variants={imageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              />
-            </AnimatePresence>
-          </div>
+          {hasSmallImages && (
+            <div className="absolute bottom-[-40px] right-[-40px] hidden md:block w-[200px] h-[150px] rounded-xl overflow-hidden shadow-lg">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentSmallImageIndex}
+                  src={`${API_BASE_URL}${smallImages[currentSmallImageIndex]}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  variants={imageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                />
+              </AnimatePresence>
+            </div>
+          )}
         </div>
 
         {/* RIGHT - CONTENT */}

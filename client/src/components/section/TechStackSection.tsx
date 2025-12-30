@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
-
+const API_BASE_URL = import.meta.env.API_BASE_URL;
 const COLORS = {
   darkGreen: "#01311F",
   gold: "#B99A49",
@@ -47,7 +47,7 @@ const TechStackSection: React.FC = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/tech-stack", {
+      .get(`${API_BASE_URL}/api/tech-stack`, {
         params: { domainId: domainId ?? 0, courseId: courseId ?? 0 },
       })
       .then(res => setTechStack(res.data));
