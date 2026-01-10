@@ -5,7 +5,7 @@ import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = import.meta.env.API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /* ---------------- COLORS ---------------- */
 const COLORS = {

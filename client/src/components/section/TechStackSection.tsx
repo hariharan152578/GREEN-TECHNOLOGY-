@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
-const API_BASE_URL = import.meta.env.API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const COLORS = {
   darkGreen: "#01311F",
   gold: "#B99A49",

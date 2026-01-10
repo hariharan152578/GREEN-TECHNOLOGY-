@@ -13,6 +13,7 @@ import ContactSection from "../../components/section/ContactSection";
 import CertificateSection from "../../components/section/CertificateSection";
 import YoutubeSection from "../../components/section/YouTubePlaylistSection";
 import DomainSlider from "../../components/section/DomainSlider";
+import YoutubeShortSection from "../../components/section/YoutubeShortSection";
 
 const Home: React.FC = () => {
   const { setDomainId, setCourseId } = usePageContext();
@@ -38,6 +39,7 @@ const Home: React.FC = () => {
         <MaterialDownloadSection />
         <TrustedCompaniesSection />
         <YoutubeSection />
+        <YoutubeShortSection/>
         <CertificateSection />
         <ContactSection />
       </main>

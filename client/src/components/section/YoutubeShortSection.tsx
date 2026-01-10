@@ -3,23 +3,25 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { usePageContext } from "../../context/usePageContext";
 
-/* ---------------- COLORS ---------------- */
+/* ---------------- CONFIG ---------------- */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const COLORS = {
   darkGreen: "#01311F",
   gold: "#B99A49",
-  cream: "#F0ECE3",
 };
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /* ---------------- TYPES ---------------- */
 interface VideoItem {
   id: number;
+  domainId: number;
+  courseId: number;
   name: string;
   batch: string;
   quote: string;
   imageUrl: string;
   videoUrl: string;
+  order: number;
 }
 
 /* ---------------- HELPERS ---------------- */
@@ -32,65 +34,72 @@ const getEmbedSource = (url: string) => {
 
   return match
     ? `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`
-    : url;
+    : "";
 };
 
 /* ---------------- COMPONENT ---------------- */
-const YoutubeSection: React.FC = () => {
+const YoutubeShortSection: React.FC = () => {
   const { domainId, courseId } = usePageContext();
 
   const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [current, setCurrent] = useState(0);
+  const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<VideoItem | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const ITEMS_PER_PAGE = 3;
 
-  /* ---------------- FETCH (SAFE) ---------------- */
+  /* ---------------- FETCH ---------------- */
   useEffect(() => {
+    setLoading(true);
+
     axios
-      .get(`${API_BASE_URL}/api/videos`, {
-        params: { domainId: domainId ?? 0, courseId: courseId ?? 0 },
+      .get(`${API_BASE_URL}/api/youtube-shorts-videos`, {
+        params: {
+          domainId: Number(domainId ?? 0),
+          courseId: Number(courseId ?? 0),
+        },
       })
       .then((res) => {
-        const list = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data?.data)
-          ? res.data.data
-          : [];
-
-        setVideos(list);
-        setCurrent(0);
+        console.log("YOUTUBE SHORTS RESPONSE:", res.data);
+        setVideos(Array.isArray(res.data) ? res.data : []);
+        setPage(0);
       })
       .catch((err) => {
-        console.error("Failed to load videos", err);
+        console.error("YouTube Shorts fetch failed", err);
         setVideos([]);
-      });
+      })
+      .finally(() => setLoading(false));
   }, [domainId, courseId]);
 
-  /* ---------------- ESC CLOSE ---------------- */
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
+  /* ---------------- UI STATES ---------------- */
+  if (loading) {
+    return (
+      <div className="py-20 text-center text-white">
+        Loading YouTube Shorts...
+      </div>
+    );
+  }
 
-  /* ---------------- GUARD ---------------- */
-  if (!Array.isArray(videos) || videos.length === 0) return null;
+  if (!videos.length) {
+    return (
+      <div className="py-20 text-center text-white">
+        No YouTube Shorts Available
+      </div>
+    );
+  }
 
   const totalPages = Math.ceil(videos.length / ITEMS_PER_PAGE);
   const visible = videos.slice(
-    current * ITEMS_PER_PAGE,
-    current * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+    page * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   );
 
   return (
     <section className="py-24 px-6" style={{ background: COLORS.darkGreen }}>
-      <div className="max-w-7xl mx-auto relative">
+      <div className="max-w-7xl mx-auto">
         {/* HEADER */}
         <h2 className="text-4xl font-bold text-center mb-14 text-white">
-          Videos <span style={{ color: COLORS.gold }}>. Resource</span>
+          YouTube <span style={{ color: COLORS.gold }}>Shorts</span>
         </h2>
 
         {/* CARDS */}
@@ -110,13 +119,10 @@ const YoutubeSection: React.FC = () => {
 
               <div className="p-4 bg-black/80">
                 <h3 className="text-white font-bold">{v.name}</h3>
-
                 <p className="text-sm" style={{ color: COLORS.gold }}>
                   {v.batch}
                 </p>
-
-                {/* ✅ FULL QUOTE FIX */}
-                <p className="text-white/80 text-sm mt-2 whitespace-normal break-words leading-relaxed">
+                <p className="text-white/80 text-sm mt-2">
                   “{v.quote}”
                 </p>
               </div>
@@ -124,12 +130,12 @@ const YoutubeSection: React.FC = () => {
           ))}
         </div>
 
-        {/* NAVIGATION */}
+        {/* PAGINATION */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-6 mt-10">
+          <div className="flex justify-center gap-6 mt-12">
             <button
-              onClick={() => setCurrent((p) => Math.max(p - 1, 0))}
-              disabled={current === 0}
+              onClick={() => setPage((p) => Math.max(p - 1, 0))}
+              disabled={page === 0}
               className="px-6 py-2 rounded-full font-bold disabled:opacity-40"
               style={{ background: COLORS.gold, color: COLORS.darkGreen }}
             >
@@ -138,9 +144,9 @@ const YoutubeSection: React.FC = () => {
 
             <button
               onClick={() =>
-                setCurrent((p) => Math.min(p + 1, totalPages - 1))
+                setPage((p) => Math.min(p + 1, totalPages - 1))
               }
-              disabled={current === totalPages - 1}
+              disabled={page === totalPages - 1}
               className="px-6 py-2 rounded-full font-bold disabled:opacity-40"
               style={{ background: COLORS.gold, color: COLORS.darkGreen }}
             >
@@ -149,7 +155,7 @@ const YoutubeSection: React.FC = () => {
           </div>
         )}
 
-        {/* MODAL */}
+        {/* VIDEO MODAL */}
         <AnimatePresence>
           {selected && (
             <motion.div
@@ -164,13 +170,19 @@ const YoutubeSection: React.FC = () => {
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.9 }}
-                className="w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl"
+                className="w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden"
               >
-                <iframe
-                  src={getEmbedSource(selected.videoUrl)}
-                  className="w-full h-full"
-                  allow="autoplay; fullscreen"
-                />
+                {getEmbedSource(selected.videoUrl) ? (
+                  <iframe
+                    src={getEmbedSource(selected.videoUrl)}
+                    className="w-full h-full"
+                    allow="autoplay; fullscreen"
+                  />
+                ) : (
+                  <div className="text-white flex items-center justify-center h-full">
+                    Invalid YouTube URL
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}
@@ -180,4 +192,4 @@ const YoutubeSection: React.FC = () => {
   );
 };
 
-export default YoutubeSection;
+export default YoutubeShortSection;

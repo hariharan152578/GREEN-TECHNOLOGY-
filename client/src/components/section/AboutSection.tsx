@@ -1,11 +1,12 @@
 /* eslint-disable no-irregular-whitespace */
+
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { usePageContext } from "../../context/usePageContext";
 import { safeGet } from "../../util/safeGet";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = import.meta.env.API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /* ---------------- TYPES ---------------- */
 interface AboutData {
@@ -22,40 +23,33 @@ const AboutSection: React.FC = () => {
   const { domainId, courseId } = usePageContext();
 
   const [aboutData, setAboutData] = useState<AboutData | null>(null);
-  const [currentMainImageIndex, setCurrentMainImageIndex] = useState(0);
-  const [currentSmallImageIndex, setCurrentSmallImageIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const SLIDESHOW_INTERVAL = 4000;
-  const TRANSITION_DURATION = 0.8;
 
-  /* ---------------- FETCH ABOUT (SAFE) ---------------- */
+  /* ---------------- FETCH ABOUT ---------------- */
   useEffect(() => {
     let mounted = true;
 
     const fetchAbout = async () => {
-      let data = await safeGet<AboutData>(
-        `${API_BASE_URL}/api/about`,
-        {
-          domainId: domainId ?? undefined,
-          courseId: courseId ?? undefined,
-        }
-      );
+      let data = await safeGet<AboutData>(`${API_BASE_URL}/api/about`, {
+        domainId: domainId ?? undefined,
+        courseId: courseId ?? undefined,
+      });
 
       if (!data) {
-        data = await safeGet<AboutData>(
-          `${API_BASE_URL}/api/about`,
-          { domainId: 0, courseId: 0 }
-        );
+        data = await safeGet<AboutData>(`${API_BASE_URL}/api/about`, {
+          domainId: 0,
+          courseId: 0,
+        });
       }
 
       if (mounted && data) {
         setAboutData({
           ...data,
           mainImages: Array.isArray(data.mainImages) ? data.mainImages : [],
-          smallImages: Array.isArray(data.smallImages) ? data.smallImages : [],
         });
-        setCurrentMainImageIndex(0);
-        setCurrentSmallImageIndex(0);
+        setCurrentImageIndex(0);
       }
     };
 
@@ -65,84 +59,79 @@ const AboutSection: React.FC = () => {
     };
   }, [domainId, courseId]);
 
-  /* ---------------- SAFE IMAGE FLAGS ---------------- */
-  const hasMainImages =
-    Array.isArray(aboutData?.mainImages) &&
-    aboutData.mainImages.length > 0;
-
-  const hasSmallImages =
-    Array.isArray(aboutData?.smallImages) &&
-    aboutData.smallImages.length > 0;
-
-  /* ---------------- SLIDESHOW EFFECTS ---------------- */
+  /* ---------------- SLIDESHOW ---------------- */
   useEffect(() => {
-    if (!hasMainImages || !aboutData) return;
+    if (!aboutData?.mainImages?.length) return;
 
     const interval = setInterval(() => {
-      setCurrentMainImageIndex(
+      setCurrentImageIndex(
         prev => (prev + 1) % aboutData.mainImages.length
       );
     }, SLIDESHOW_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [hasMainImages, aboutData?.mainImages.length]);
-
-  useEffect(() => {
-    if (!hasSmallImages || !aboutData) return;
-
-    const interval = setInterval(() => {
-      setCurrentSmallImageIndex(
-        prev => (prev + 1) % aboutData.smallImages.length
-      );
-    }, SLIDESHOW_INTERVAL + 1000);
-
-    return () => clearInterval(interval);
-  }, [hasSmallImages, aboutData?.smallImages.length]);
+  }, [aboutData?.mainImages?.length]);
 
   /* ---------------- GUARD ---------------- */
   if (!aboutData) {
     return (
-      <div className="py-20 text-center text-gray-400">
+      <div className="py-24 text-center text-gray-400">
         About section coming soon
       </div>
     );
   }
 
-  const {
-    label,
-    heading,
-    description1,
-    description2,
-    mainImages,
-    smallImages,
-  } = aboutData;
+  const { label, heading, description1, description2, mainImages } = aboutData;
 
   /* ---------------- ANIMATION VARIANTS ---------------- */
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
+
+  const contentVariants: Variants = {
+    hidden: { opacity: 0, x: -30 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.3, delayChildren: 0.2 },
+      x: 0,
+      transition: { duration: 0.9, ease: "easeOut" },
     },
   };
 
+  /* Floating parallax motion */
+  const floatVariants: Variants = {
+    animate: (custom: number) => ({
+      y: [0, -18, 0],
+      x: [0, custom, 0],
+      transition: {
+        duration: 7 + Math.abs(custom),
+        repeat: Infinity,
+        ease: "easeInOut",
+      },
+    }),
+  };
+
+  /* Rotating glow ring */
+  const rotateVariants: Variants = {
+    animate: {
+      rotate: 360,
+      transition: {
+        duration: 40,
+        repeat: Infinity,
+        ease: "linear",
+      },
+    },
+  };
+
+  /* Image cross-fade */
   const imageVariants: Variants = {
     initial: { opacity: 0, scale: 1.1 },
     animate: {
       opacity: 1,
       scale: 1,
-      transition: { duration: TRANSITION_DURATION },
+      transition: { duration: 1.4, ease: "easeOut" },
     },
     exit: {
       opacity: 0,
-      scale: 0.9,
-      transition: { duration: TRANSITION_DURATION },
+      scale: 0.95,
+      transition: { duration: 1.2, ease: "easeInOut" },
     },
-  };
-
-  const contentVariants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
   };
 
   /* ---------------- UI ---------------- */
@@ -151,70 +140,92 @@ const AboutSection: React.FC = () => {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
-      className="w-full bg-white py-20 px-4 md:px-20"
+      className="relative w-full bg-white py-24 px-6 md:px-20 overflow-hidden"
     >
-      <motion.div
-        variants={containerVariants}
-        className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center"
-      >
-        {/* LEFT - IMAGES */}
-        <div className="relative">
-          <div className="rounded-2xl overflow-hidden shadow-lg w-full h-[500px] md:h-[600px] relative">
-            {hasMainImages ? (
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={currentMainImageIndex}
-                  src={`${API_BASE_URL}${mainImages[currentMainImageIndex]}`}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  variants={imageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                />
-              </AnimatePresence>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400">
-                Image coming soon
-              </div>
-            )}
-          </div>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-          {hasSmallImages && (
-            <div className="absolute bottom-[-40px] right-[-40px] hidden md:block w-[200px] h-[150px] rounded-xl overflow-hidden shadow-lg">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={currentSmallImageIndex}
-                  src={`${API_BASE_URL}${smallImages[currentSmallImageIndex]}`}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  variants={imageVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                />
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT - CONTENT */}
+        {/* LEFT CONTENT */}
         <motion.div variants={contentVariants}>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="h-[2px] w-10 bg-[#B99A49]" />
-            <span className="text-sm uppercase tracking-wider text-gray-500">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="h-[2px] w-12 bg-[#1BA97B]" />
+            <span className="uppercase tracking-widest text-sm font-medium text-gray-500">
               {label}
             </span>
           </div>
 
-          <h2 className="text-3xl md:text-4xl font-bold text-[#01311F] mb-6">
+          <h2 className="text-3xl md:text-4xl xl:text-5xl font-extrabold leading-tight text-[#0E2F25] mb-6">
             {heading}
           </h2>
 
-          <p className="text-gray-600 mb-4">{description1}</p>
+          <p className="text-gray-600 text-base leading-relaxed mb-4">
+            {description1}
+          </p>
+
           {description2 && (
-            <p className="text-gray-600">{description2}</p>
+            <p className="text-gray-600 text-base leading-relaxed">
+              {description2}
+            </p>
           )}
         </motion.div>
-      </motion.div>
+
+        {/* RIGHT IMAGE COMPOSITION */}
+        <div className="relative flex justify-center items-center">
+
+          {/* Glow Aura */}
+          <motion.div
+            animate={{ scale: [1, 1.05, 1], opacity: [0.6, 0.9, 0.6] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute w-[360px] h-[360px] md:w-[560px] md:h-[560px] bg-gradient-to-tr from-[#1BA97B] to-[#CFEDE4] rounded-full blur-3xl opacity-60"
+          />
+
+          {/* Rotating Ring */}
+          <motion.div
+            variants={rotateVariants}
+            animate="animate"
+            className="absolute w-[420px] h-[420px] md:w-[620px] md:h-[620px] border border-[#1BA97B]/30 rounded-full"
+          />
+
+          {/* Outer Circle */}
+          <motion.div
+            variants={floatVariants}
+            custom={14}
+            animate="animate"
+            className="absolute w-[320px] h-[320px] md:w-[500px] md:h-[500px] bg-[#CFEDE4] rounded-full -translate-x-10"
+          />
+
+          {/* Inner Circle */}
+          <motion.div
+            variants={floatVariants}
+            custom={-8}
+            animate="animate"
+            className="absolute w-[300px] h-[300px] md:w-[480px] md:h-[480px] bg-[#0E2F25] rounded-full translate-x-4 shadow-2xl"
+          />
+
+          {/* Main Image */}
+          <motion.div
+            variants={floatVariants}
+            custom={0}
+            animate="animate"
+            className="relative w-[280px] h-[280px] md:w-[440px] md:h-[440px] rounded-full overflow-hidden z-10"
+          >
+            <AnimatePresence mode="wait">
+              {mainImages.length > 0 && (
+                <motion.img
+                  key={currentImageIndex}
+                  src={`${API_BASE_URL}${mainImages[currentImageIndex]}`}
+                  alt="Greens Technologies"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  variants={imageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                />
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+        </div>
+      </div>
     </motion.section>
   );
 };

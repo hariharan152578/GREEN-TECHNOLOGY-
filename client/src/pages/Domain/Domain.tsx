@@ -48,7 +48,7 @@ const Domain: React.FC = () => {
     <div className="min-h-screen bg-white">
       <main>
         <HeroSection />
-        <EnrollSection />
+        <AboutSection />
         <SuccessStoriesSection />
         <CareerImpactSection />
         <CourseSection />
@@ -58,8 +58,8 @@ const Domain: React.FC = () => {
         <CertificateSection />
         <TestimonialsSection />
         <MaterialDownloadSection />  
-        <AboutSection />
-        <YoutubeSection/>
+        <YoutubeSection/>  
+        <EnrollSection />
         <ContactSection />
       </main>
     </div>

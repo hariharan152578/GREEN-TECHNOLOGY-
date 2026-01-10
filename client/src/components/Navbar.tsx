@@ -3,7 +3,7 @@ import axios from "axios";
 import logo from "../assets/logo.png";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.BASE_URL;
 
 const Navbar = () => {
   const [notices, setNotices] = useState<string[]>([]);
