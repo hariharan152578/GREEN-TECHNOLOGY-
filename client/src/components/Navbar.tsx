@@ -3,18 +3,30 @@ import axios from "axios";
 import logo from "../assets/logo.png";
 
 /* ---------------- CONFIG ---------------- */
-const API_BASE_URL = import.meta.env.BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const Navbar = () => {
   const [notices, setNotices] = useState<string[]>([]);
 
   /* ---------------- FETCH NOTICES ---------------- */
-  useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/api/notices`)
-      .then(res => setNotices(res.data))
-      .catch(err => console.error("Error fetching notices", err));
-  }, []);
+  // useEffect(() => {
+  //   axios
+  //     .get(`${API_BASE_URL}/api/notices`)
+  //     .then(res => setNotices(res.data))
+  //     .catch(err => console.error("Error fetching notices", err));
+  // }, []);
+useEffect(() => {
+  axios
+    .get(`${API_BASE_URL}/api/notices`)
+    .then(res => {
+      if (Array.isArray(res.data)) {
+        setNotices(res.data.filter((n): n is string => typeof n === "string"));
+      } else {
+        setNotices([]);
+      }
+    })
+    .catch(() => setNotices([]));
+}, []);
 
   const marqueeText =
     notices.length > 0

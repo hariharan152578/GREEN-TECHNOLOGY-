@@ -106,8 +106,10 @@ const DomainSection: React.FC = () => {
     setDomainId(currentSlide.domainId);
     setCourseId(currentSlide.courseId ?? 0);
     navigate(`/domain/${currentSlide.domainId}`);
+   
+    
+    
   };
-
   /* ---------------- TOUCH SWIPE ---------------- */
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
